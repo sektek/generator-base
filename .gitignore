@@ -294,6 +294,3 @@ dist/
 
 # Local working trees for parallel branch work (not tracked)
 .worktrees/
-
-# Local working trees for parallel branch work (not tracked)
-.worktrees/
