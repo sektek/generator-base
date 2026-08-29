@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.0](https://github.com/sektek/generator-base/compare/v0.4.0...v0.5.0) (2026-08-29)
+
+### Features
+
+* **app:** compose git and github sub-generators ([#7](https://github.com/sektek/generator-base/issues/7)) ([ddc1145](https://github.com/sektek/generator-base/commit/ddc1145c80977df1074ace745d27ee98b8541306))
+
 ## [0.4.0](https://github.com/sektek/generator-base/compare/v0.3.0...v0.4.0) (2026-08-29)
 
 ### Features
