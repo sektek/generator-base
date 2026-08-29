@@ -21,6 +21,12 @@ export class GitGenerator extends BaseGenerator<
   GitGeneratorOptions,
   BaseFeatures
 > {
+  // Decided once in taskInitializing, before Yeoman's writing phase adds
+  // any files — by taskEnd the destination is never empty regardless of
+  // what was there when this run started, so "was it empty" can only be
+  // answered this early. See taskInitializing for why this matters.
+  #shouldInitAndCommit = false;
+
   constructor(
     args: string[],
     options: GitGeneratorOptions,
@@ -32,17 +38,31 @@ export class GitGenerator extends BaseGenerator<
     });
   }
 
-  async taskEnd() {
+  async taskInitializing() {
     const { options } = this;
     if (options.gitInit === false) return;
 
     const client = options.gitClient ?? defaultGitClient();
     const cwd = this.destinationRoot();
+
+    // Only safe to auto-commit *everything* (commitAll's `git add -A`)
+    // when we're the ones creating the repo AND the destination started
+    // empty — otherwise pre-existing, unrelated files (pending work,
+    // secrets, whatever else happened to be sitting there) would get
+    // swept into the "Initial commit" without anyone asking for that.
     const alreadyInitialized = await client.isRepoInitialized(cwd);
-    if (!alreadyInitialized) {
-      await client.initRepo(cwd);
-      await client.commitAll(cwd, 'Initial commit');
-    }
+    this.#shouldInitAndCommit =
+      !alreadyInitialized && (await client.isDestinationEmpty(cwd));
+  }
+
+  async taskEnd() {
+    if (!this.#shouldInitAndCommit) return;
+
+    const { options } = this;
+    const client = options.gitClient ?? defaultGitClient();
+    const cwd = this.destinationRoot();
+    await client.initRepo(cwd);
+    await client.commitAll(cwd, 'Initial commit');
   }
 }
 

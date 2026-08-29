@@ -5,7 +5,12 @@ import { expect, use } from 'chai';
 import sinon, { SinonSandbox, SinonStub } from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { commitAll, initRepo, isRepoInitialized } from './git.js';
+import {
+  commitAll,
+  initRepo,
+  isDestinationEmpty,
+  isRepoInitialized,
+} from './git.js';
 
 use(sinonChai);
 
@@ -46,6 +51,38 @@ describe('lib/git/git', function () {
 
       expect(result).to.be.false;
       expect(execFileStub).not.to.have.been.called;
+    });
+  });
+
+  describe('isDestinationEmpty', function () {
+    it('returns true when the directory does not exist yet, without reading it', async function () {
+      sandbox.stub(fs, 'existsSync').returns(false);
+      const readdirStub = sandbox.stub(fs, 'readdirSync');
+
+      const result = await isDestinationEmpty('/repo');
+
+      expect(result).to.be.true;
+      expect(readdirStub).not.to.have.been.called;
+    });
+
+    it('returns true when the directory exists but has no entries', async function () {
+      sandbox.stub(fs, 'existsSync').returns(true);
+      // @ts-expect-error - sinon's fake doesn't match readdirSync's overloads
+      sandbox.stub(fs, 'readdirSync').returns([]);
+
+      const result = await isDestinationEmpty('/repo');
+
+      expect(result).to.be.true;
+    });
+
+    it('returns false when the directory has existing entries', async function () {
+      sandbox.stub(fs, 'existsSync').returns(true);
+      // @ts-expect-error - sinon's fake doesn't match readdirSync's overloads
+      sandbox.stub(fs, 'readdirSync').returns(['.env', 'notes.txt']);
+
+      const result = await isDestinationEmpty('/repo');
+
+      expect(result).to.be.false;
     });
   });
 

@@ -29,6 +29,25 @@ export async function isRepoInitialized(cwd: string): Promise<boolean> {
 }
 
 /**
+ * Checks whether `cwd` has no entries at all (or doesn't exist yet) — a
+ * pure predicate, no side effect. Used to decide whether it's safe to
+ * auto-commit *everything* in the directory (`commitAll`'s `git add -A`):
+ * a non-empty, not-yet-git directory might hold files unrelated to this
+ * run (pending work, secrets, etc.) that shouldn't be swept into an
+ * "Initial commit" without being asked.
+ *
+ * @param cwd - The directory to check.
+ * @returns Whether `cwd` currently has zero entries, or doesn't exist.
+ */
+export async function isDestinationEmpty(cwd: string): Promise<boolean> {
+  if (!fs.existsSync(cwd)) {
+    return true;
+  }
+
+  return fs.readdirSync(cwd).length === 0;
+}
+
+/**
  * Initializes a git repository in `cwd` with `git init -b main`.
  *
  * @param cwd - The directory to initialize a git repository in.

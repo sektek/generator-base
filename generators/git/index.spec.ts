@@ -18,13 +18,18 @@ const generator = join(__dirname, 'index.js');
 
 type FakeGitClient = GitClient & {
   isRepoInitialized: SinonStub;
+  isDestinationEmpty: SinonStub;
   initRepo: SinonStub;
   commitAll: SinonStub;
 };
 
-function fakeGitClient(alreadyInitialized: boolean): FakeGitClient {
+function fakeGitClient(
+  alreadyInitialized: boolean,
+  destinationEmpty = true,
+): FakeGitClient {
   return {
     isRepoInitialized: sinon.stub().resolves(alreadyInitialized),
+    isDestinationEmpty: sinon.stub().resolves(destinationEmpty),
     initRepo: sinon.stub().resolves(),
     commitAll: sinon.stub().resolves(),
   };
@@ -58,6 +63,20 @@ describe('@sektek/base:git', function () {
       await helper.run(generator).withOptions({ gitClient });
 
       expect(gitClient.isRepoInitialized).to.have.been.calledOnce;
+      expect(gitClient.initRepo).not.to.have.been.called;
+      expect(gitClient.commitAll).not.to.have.been.called;
+    });
+
+    it('does nothing when no .git exists but the destination was not empty', async function () {
+      // Guards against auto-committing pre-existing, unrelated files (e.g.
+      // secrets, pending work) that happened to be sitting in the
+      // destination directory before this run — git add -A would otherwise
+      // sweep them into the "Initial commit" without anyone asking for that.
+      const gitClient = fakeGitClient(false, false);
+
+      await helper.run(generator).withOptions({ gitClient });
+
+      expect(gitClient.isDestinationEmpty).to.have.been.calledOnce;
       expect(gitClient.initRepo).not.to.have.been.called;
       expect(gitClient.commitAll).not.to.have.been.called;
     });
