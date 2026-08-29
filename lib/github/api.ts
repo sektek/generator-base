@@ -1,29 +1,21 @@
+import { NullLogger } from '@sektek/utility-belt';
 import { Octokit } from '@octokit/rest';
 
 import { ApiOptions } from './token.js';
 
-// @octokit/plugin-request-log (bundled into @octokit/rest) writes straight
-// to the console on every non-2xx response by default — noisy and
-// redundant here, since every call site below already catches the failure
-// and rethrows it as a clean Error via toRequestError. No-op every level
-// rather than filtering, so a caller's own error handling is the only
-// thing that surfaces a failure.
-const silentLog = {
-  debug: () => {},
-  info: () => {},
-  warn: () => {},
-  error: () => {},
-};
-
 /**
  * Builds an Octokit client authenticated per `auth`, with request logging
- * silenced (see {@link silentLog}).
+ * silenced via a {@link NullLogger}. `@octokit/plugin-request-log` (bundled
+ * into `@octokit/rest`) writes straight to the console on every non-2xx
+ * response by default — noisy and redundant here, since every call site
+ * below already catches the failure and rethrows it as a clean Error via
+ * toRequestError.
  *
  * @param auth - How to authenticate.
  * @returns The client.
  */
 function client(auth: ApiOptions): Octokit {
-  return new Octokit({ auth: auth.token, log: silentLog });
+  return new Octokit({ auth: auth.token, log: new NullLogger() });
 }
 
 export type AuthenticatedUser = {
