@@ -102,9 +102,13 @@ export async function repoExists(
   auth: ApiOptions,
   opts: RepoExistsOptions,
 ): Promise<RepoExistsResult> {
+  // Resolved via getAuthenticatedUser (not a raw octokit.users.getAuthenticated()
+  // call) so a failure here — bad token, network error — is already wrapped by
+  // toRequestError, same as every other failure this function can produce,
+  // instead of an unnormalized Octokit error escaping this module's own
+  // error-message format.
+  const owner = opts.owner ?? (await getAuthenticatedUser(auth)).login;
   const octokit = client(auth);
-  const owner =
-    opts.owner ?? (await octokit.users.getAuthenticated()).data.login;
 
   try {
     await octokit.repos.get({ owner, repo: opts.name });

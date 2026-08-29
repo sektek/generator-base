@@ -113,6 +113,18 @@ describe('lib/github/api', function () {
         expect((err as Error).message).to.include('Bad credentials');
       }
     });
+
+    it('normalizes a failure resolving the authenticated user (owner omitted) the same way as any other failure', async function () {
+      fetchStub.resolves(jsonResponse(401, { message: 'Bad credentials' }));
+
+      try {
+        await repoExists({ token: 'bad-token' }, { name: 'repo' });
+        expect.fail('expected repoExists to throw');
+      } catch (err) {
+        expect((err as Error).message).to.include('401');
+        expect((err as Error).message).to.include('Bad credentials');
+      }
+    });
   });
 
   describe('createRepo', function () {
