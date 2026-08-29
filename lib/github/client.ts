@@ -1,3 +1,4 @@
+import { ApiOptions, resolveToken } from './token.js';
 import {
   AuthenticatedUser,
   CreateRepoOptions,
@@ -6,16 +7,18 @@ import {
   getAuthenticatedUser,
 } from './api.js';
 import { addRemote, push } from './remote.js';
-import { resolveToken } from './token.js';
 
 export type GithubClient = {
   resolveToken(explicit?: string): Promise<string>;
-  getAuthenticatedUser(token: string): Promise<AuthenticatedUser>;
-  createRepo(token: string, opts: CreateRepoOptions): Promise<CreateRepoResult>;
+  getAuthenticatedUser(auth: ApiOptions): Promise<AuthenticatedUser>;
+  createRepo(
+    auth: ApiOptions,
+    opts: CreateRepoOptions,
+  ): Promise<CreateRepoResult>;
   addRemote(cwd: string, name: string, url: string): Promise<void>;
   push(
     cwd: string,
-    token: string,
+    auth: ApiOptions,
     remote: string,
     branch: string,
   ): Promise<void>;

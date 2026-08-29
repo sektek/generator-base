@@ -36,7 +36,7 @@ describe('lib/github/api', function () {
     it('requests /user and returns the login', async function () {
       fetchStub.resolves(jsonResponse(200, { login: 'octocat' }));
 
-      const user = await getAuthenticatedUser('a-token');
+      const user = await getAuthenticatedUser({ token: 'a-token' });
 
       expect(user).to.deep.equal({ login: 'octocat' });
       const [url] = fetchStub.firstCall.args as [string];
@@ -47,7 +47,7 @@ describe('lib/github/api', function () {
       fetchStub.resolves(jsonResponse(401, { message: 'Bad credentials' }));
 
       try {
-        await getAuthenticatedUser('bad-token');
+        await getAuthenticatedUser({ token: 'bad-token' });
         expect.fail('expected getAuthenticatedUser to throw');
       } catch (err) {
         expect((err as Error).message).to.include('401');
@@ -66,10 +66,13 @@ describe('lib/github/api', function () {
         }),
       );
 
-      const result = await createRepo('a-token', {
-        name: 'repo',
-        private: true,
-      });
+      const result = await createRepo(
+        { token: 'a-token' },
+        {
+          name: 'repo',
+          private: true,
+        },
+      );
 
       expect(result).to.deep.equal({
         cloneUrl: 'https://github.com/octocat/repo.git',
@@ -95,12 +98,15 @@ describe('lib/github/api', function () {
         }),
       );
 
-      await createRepo('a-token', {
-        owner: 'sektek',
-        name: 'repo',
-        private: false,
-        description: 'a repo',
-      });
+      await createRepo(
+        { token: 'a-token' },
+        {
+          owner: 'sektek',
+          name: 'repo',
+          private: false,
+          description: 'a repo',
+        },
+      );
 
       const [url, init] = fetchStub.firstCall.args as [string, RequestInit];
       expect(url).to.equal('https://api.github.com/orgs/sektek/repos');
@@ -118,7 +124,7 @@ describe('lib/github/api', function () {
       );
 
       try {
-        await createRepo('a-token', { name: 'repo', private: true });
+        await createRepo({ token: 'a-token' }, { name: 'repo', private: true });
         expect.fail('expected createRepo to throw');
       } catch (err) {
         expect((err as Error).message).to.include('422');

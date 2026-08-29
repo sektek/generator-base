@@ -1,6 +1,8 @@
 import childProcess from 'node:child_process';
 import { promisify } from 'node:util';
 
+import { ApiOptions } from './token.js';
+
 /**
  * Adds a git remote named `name` pointing at `url` in the repository at
  * `cwd`.
@@ -24,13 +26,13 @@ export async function addRemote(
  * to `.git/config`.
  *
  * @param cwd - The local repository's working directory.
- * @param token - The token to authenticate the push with.
+ * @param auth - How to authenticate the push.
  * @param remote - The remote to push to, e.g. `origin`.
  * @param branch - The branch to push.
  */
 export async function push(
   cwd: string,
-  token: string,
+  auth: ApiOptions,
   remote: string,
   branch: string,
 ): Promise<void> {
@@ -39,7 +41,7 @@ export async function push(
     'git',
     [
       '-c',
-      `http.extraHeader=AUTHORIZATION: bearer ${token}`,
+      `http.extraHeader=AUTHORIZATION: bearer ${auth.token}`,
       'push',
       '-u',
       remote,

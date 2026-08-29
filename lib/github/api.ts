@@ -1,5 +1,7 @@
 import { Octokit } from '@octokit/rest';
 
+import { ApiOptions } from './token.js';
+
 // @octokit/plugin-request-log (bundled into @octokit/rest) writes straight
 // to the console on every non-2xx response by default — noisy and
 // redundant here, since every call site below already catches the failure
@@ -14,14 +16,14 @@ const silentLog = {
 };
 
 /**
- * Builds an Octokit client authenticated as `token`, with request logging
+ * Builds an Octokit client authenticated per `auth`, with request logging
  * silenced (see {@link silentLog}).
  *
- * @param token - The bearer token to authenticate with.
+ * @param auth - How to authenticate.
  * @returns The client.
  */
-function client(token: string): Octokit {
-  return new Octokit({ auth: token, log: silentLog });
+function client(auth: ApiOptions): Octokit {
+  return new Octokit({ auth: auth.token, log: silentLog });
 }
 
 export type AuthenticatedUser = {
@@ -63,16 +65,16 @@ function toRequestError(error: unknown): Error {
 }
 
 /**
- * Fetches the user authenticated by `token`.
+ * Fetches the authenticated user.
  *
- * @param token - The bearer token to authenticate with.
+ * @param auth - How to authenticate.
  * @returns The authenticated user.
  */
 export async function getAuthenticatedUser(
-  token: string,
+  auth: ApiOptions,
 ): Promise<AuthenticatedUser> {
   try {
-    const { data } = await client(token).users.getAuthenticated();
+    const { data } = await client(auth).users.getAuthenticated();
     return { login: data.login };
   } catch (error) {
     throw toRequestError(error);
@@ -83,15 +85,15 @@ export async function getAuthenticatedUser(
  * Creates a repository owned by `opts.owner`, or by the authenticated user
  * when `opts.owner` is omitted.
  *
- * @param token - The bearer token to authenticate with.
+ * @param auth - How to authenticate.
  * @param opts - The repository to create.
  * @returns The created repository's clone/ssh/html urls.
  */
 export async function createRepo(
-  token: string,
+  auth: ApiOptions,
   opts: CreateRepoOptions,
 ): Promise<CreateRepoResult> {
-  const octokit = client(token);
+  const octokit = client(auth);
   const params = {
     name: opts.name,
     private: opts.private,

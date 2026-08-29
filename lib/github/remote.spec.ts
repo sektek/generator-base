@@ -38,7 +38,7 @@ describe('lib/github/remote', function () {
 
   describe('push', function () {
     it('shells out to `git push` with a per-invocation auth header', async function () {
-      await push('/repo', 'a-token', 'origin', 'main');
+      await push('/repo', { token: 'a-token' }, 'origin', 'main');
 
       expect(execFileStub).to.have.been.calledWith(
         'git',
@@ -55,7 +55,7 @@ describe('lib/github/remote', function () {
     });
 
     it('passes the token only via the extraHeader flag, not the remote arg', async function () {
-      await push('/repo', 'a-token', 'origin', 'main');
+      await push('/repo', { token: 'a-token' }, 'origin', 'main');
 
       const [, args] = execFileStub.firstCall.args as [string, string[]];
       expect(args[args.length - 2]).to.equal('origin');

@@ -1,6 +1,17 @@
 import childProcess from 'node:child_process';
 import { promisify } from 'node:util';
 
+/**
+ * How every call in `lib/github` authenticates against the GitHub API and
+ * `git push`. A dedicated type rather than a bare `token: string` parameter
+ * so that a future auth mechanism (e.g. a slow migration off tokens) only
+ * needs new optional fields here, not a signature change at every call
+ * site that currently takes a token.
+ */
+export type ApiOptions = {
+  token: string;
+};
+
 const MISSING_TOKEN_MESSAGE =
   'Unable to resolve a GitHub token. Set the GITHUB_TOKEN or GH_TOKEN ' +
   'environment variable, run `gh auth login`, or pass an explicit token.';
