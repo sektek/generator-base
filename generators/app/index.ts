@@ -36,8 +36,8 @@ export class AppGenerator extends BaseGenerator<
     // real run, so none of the composed sub-generators below ever actually
     // saw a caller-supplied option (gitInit, createRepo, etc.) — latent and
     // harmless while every composed sub-generator only read CoreOptions
-    // defaults, but broke as soon as git/github needed a real one. this
-    // .options is the actual, correct source, matching every other
+    // defaults, but broke as soon as git/github needed a real one.
+    // this.options is the actual, correct source, matching every other
     // generator in this codebase.
     const { options } = this;
     await this.composeWith('editorconfig', options, true);
