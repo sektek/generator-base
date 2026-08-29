@@ -15,29 +15,34 @@ async function run(cwd: string, args: string[]): Promise<void> {
 }
 
 /**
- * Initializes a git repository in `cwd` with `git init -b main`, but only if
- * one doesn't already exist there.
+ * Checks whether `cwd` already has a git repository — a pure predicate,
+ * with no side effect. Split out from a single `ensureRepoInitialized`
+ * helper so the `is`-prefix is honest about doing nothing but checking;
+ * callers that need to actually create one call {@link initRepo}
+ * themselves.
  *
- * @param cwd - The directory to initialize (or check) a git repository in.
- * @returns `true` if a repository was just created, `false` if `cwd/.git`
- * already existed. Callers use this to decide whether it's safe to
- * auto-commit.
+ * @param cwd - The directory to check.
+ * @returns Whether `cwd/.git` already exists.
  */
-export async function ensureRepoInitialized(cwd: string): Promise<boolean> {
-  if (fs.existsSync(join(cwd, '.git'))) {
-    return false;
-  }
+export async function isRepoInitialized(cwd: string): Promise<boolean> {
+  return fs.existsSync(join(cwd, '.git'));
+}
 
+/**
+ * Initializes a git repository in `cwd` with `git init -b main`.
+ *
+ * @param cwd - The directory to initialize a git repository in.
+ */
+export async function initRepo(cwd: string): Promise<void> {
   await run(cwd, ['init', '-b', 'main']);
-  return true;
 }
 
 /**
  * Stages every change in `cwd` and commits it with `message`.
  *
  * No "skip if nothing staged" logic: this is only ever called right after
- * `ensureRepoInitialized` returns `true`, against a repo that was just
- * created and is guaranteed to have untracked scaffolded files to commit.
+ * a fresh {@link initRepo}, against a repo that's guaranteed to have
+ * untracked scaffolded files to commit.
  *
  * Git identity (`user.name`/`user.email`) is intentionally left to the
  * caller's own git config — a missing identity surfaces git's own native

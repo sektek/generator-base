@@ -1,7 +1,8 @@
-import { commitAll, ensureRepoInitialized } from './git.js';
+import { commitAll, initRepo, isRepoInitialized } from './git.js';
 
 export type GitClient = {
-  ensureRepoInitialized(cwd: string): Promise<boolean>;
+  isRepoInitialized(cwd: string): Promise<boolean>;
+  initRepo(cwd: string): Promise<void>;
   commitAll(cwd: string, message: string): Promise<void>;
 };
 
@@ -12,7 +13,8 @@ export type GitClient = {
  */
 export function defaultGitClient(): GitClient {
   return {
-    ensureRepoInitialized,
+    isRepoInitialized,
+    initRepo,
     commitAll,
   };
 }

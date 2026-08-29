@@ -5,7 +5,7 @@ import { expect, use } from 'chai';
 import sinon, { SinonSandbox, SinonStub } from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { commitAll, ensureRepoInitialized } from './git.js';
+import { commitAll, initRepo, isRepoInitialized } from './git.js';
 
 use(sinonChai);
 
@@ -29,22 +29,30 @@ describe('lib/git/git', function () {
     sandbox.restore();
   });
 
-  describe('ensureRepoInitialized', function () {
-    it('does not run git init and returns false when .git already exists', async function () {
+  describe('isRepoInitialized', function () {
+    it('returns true when .git already exists, without running git', async function () {
       sandbox.stub(fs, 'existsSync').returns(true);
 
-      const result = await ensureRepoInitialized('/repo');
+      const result = await isRepoInitialized('/repo');
+
+      expect(result).to.be.true;
+      expect(execFileStub).not.to.have.been.called;
+    });
+
+    it('returns false when .git does not exist, without running git', async function () {
+      sandbox.stub(fs, 'existsSync').returns(false);
+
+      const result = await isRepoInitialized('/repo');
 
       expect(result).to.be.false;
       expect(execFileStub).not.to.have.been.called;
     });
+  });
 
-    it('runs git init -b main and returns true when .git does not exist', async function () {
-      sandbox.stub(fs, 'existsSync').returns(false);
+  describe('initRepo', function () {
+    it('runs git init -b main', async function () {
+      await initRepo('/repo');
 
-      const result = await ensureRepoInitialized('/repo');
-
-      expect(result).to.be.true;
       expect(execFileStub).to.have.been.calledOnceWith(
         'git',
         ['init', '-b', 'main'],
