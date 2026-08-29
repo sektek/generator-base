@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import sinon, { SinonSandbox, SinonStub } from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createRepo, getAuthenticatedUser } from './api.js';
+import { createRepo, getAuthenticatedUser, repoExists } from './api.js';
 
 use(sinonChai);
 
@@ -49,6 +49,65 @@ describe('lib/github/api', function () {
       try {
         await getAuthenticatedUser({ token: 'bad-token' });
         expect.fail('expected getAuthenticatedUser to throw');
+      } catch (err) {
+        expect((err as Error).message).to.include('401');
+        expect((err as Error).message).to.include('Bad credentials');
+      }
+    });
+  });
+
+  describe('repoExists', function () {
+    it('checks /repos/{owner}/{name} directly when owner is given, without resolving the authenticated user', async function () {
+      fetchStub.resolves(jsonResponse(200, { name: 'repo' }));
+
+      const result = await repoExists(
+        { token: 'a-token' },
+        { owner: 'sektek', name: 'repo' },
+      );
+
+      expect(result).to.deep.equal({ exists: true, owner: 'sektek' });
+      expect(fetchStub).to.have.been.calledOnce;
+      const [url] = fetchStub.firstCall.args as [string];
+      expect(url).to.equal('https://api.github.com/repos/sektek/repo');
+    });
+
+    it('resolves the authenticated user first when owner is omitted, then checks under that login', async function () {
+      fetchStub
+        .onCall(0)
+        .resolves(jsonResponse(200, { login: 'octocat' }))
+        .onCall(1)
+        .resolves(jsonResponse(200, { name: 'repo' }));
+
+      const result = await repoExists({ token: 'a-token' }, { name: 'repo' });
+
+      expect(result).to.deep.equal({ exists: true, owner: 'octocat' });
+      expect(fetchStub).to.have.been.calledTwice;
+      const [firstUrl] = fetchStub.firstCall.args as [string];
+      const [secondUrl] = fetchStub.secondCall.args as [string];
+      expect(firstUrl).to.equal('https://api.github.com/user');
+      expect(secondUrl).to.equal('https://api.github.com/repos/octocat/repo');
+    });
+
+    it('returns exists: false on a 404, rather than throwing', async function () {
+      fetchStub.resolves(jsonResponse(404, { message: 'Not Found' }));
+
+      const result = await repoExists(
+        { token: 'a-token' },
+        { owner: 'sektek', name: 'repo' },
+      );
+
+      expect(result).to.deep.equal({ exists: false, owner: 'sektek' });
+    });
+
+    it('throws on a non-404 failure, e.g. a bad token', async function () {
+      fetchStub.resolves(jsonResponse(401, { message: 'Bad credentials' }));
+
+      try {
+        await repoExists(
+          { token: 'bad-token' },
+          { owner: 'sektek', name: 'repo' },
+        );
+        expect.fail('expected repoExists to throw');
       } catch (err) {
         expect((err as Error).message).to.include('401');
         expect((err as Error).message).to.include('Bad credentials');

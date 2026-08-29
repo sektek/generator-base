@@ -3,14 +3,21 @@ import {
   AuthenticatedUser,
   CreateRepoOptions,
   CreateRepoResult,
+  RepoExistsOptions,
+  RepoExistsResult,
   createRepo,
   getAuthenticatedUser,
+  repoExists,
 } from './api.js';
 import { addRemote, push } from './remote.js';
 
 export type GithubClient = {
   resolveToken(explicit?: string): Promise<string>;
   getAuthenticatedUser(auth: ApiOptions): Promise<AuthenticatedUser>;
+  repoExists(
+    auth: ApiOptions,
+    opts: RepoExistsOptions,
+  ): Promise<RepoExistsResult>;
   createRepo(
     auth: ApiOptions,
     opts: CreateRepoOptions,
@@ -34,6 +41,7 @@ export function defaultGithubClient(): GithubClient {
   return {
     resolveToken,
     getAuthenticatedUser,
+    repoExists,
     createRepo,
     addRemote,
     push,

@@ -32,6 +32,7 @@ const run = (options: Record<string, unknown> = {}) =>
 type FakeGithubClient = GithubClient & {
   resolveToken: SinonStub;
   getAuthenticatedUser: SinonStub;
+  repoExists: SinonStub;
   createRepo: SinonStub;
   addRemote: SinonStub;
   push: SinonStub;
@@ -41,6 +42,10 @@ function fakeGithubClient(): FakeGithubClient {
   return {
     resolveToken: sinon.stub().resolves('fake-token'),
     getAuthenticatedUser: sinon.stub().resolves({ login: 'someone' }),
+    // Defaults to "doesn't exist yet" so every pre-existing happy-path test
+    // below reaches createRepo/addRemote/push unchanged; the "already
+    // exists" describe block overrides this per-test.
+    repoExists: sinon.stub().resolves({ exists: false, owner: 'someone' }),
     createRepo: sinon.stub().resolves({
       cloneUrl: 'https://github.com/someone/my-project.git',
       sshUrl: 'git@github.com:someone/my-project.git',
@@ -74,12 +79,16 @@ describe('@sektek/base:github', function () {
   });
 
   describe('when createRepo is true', function () {
-    it('resolves the token, creates the repo, adds the remote, and pushes, in order', async function () {
+    it('resolves the token, checks for a collision, creates the repo, adds the remote, and pushes, in order', async function () {
       const githubClient = fakeGithubClient();
 
       await run({ gitInit: false, createRepo: true, githubClient });
 
       expect(githubClient.resolveToken).to.have.been.calledOnceWith(undefined);
+      expect(githubClient.repoExists).to.have.been.calledOnceWith(
+        { token: 'fake-token' },
+        sinon.match({ owner: undefined }),
+      );
       expect(githubClient.createRepo).to.have.been.calledOnce;
       expect(githubClient.addRemote).to.have.been.calledOnceWith(
         sinon.match.string,
@@ -94,6 +103,9 @@ describe('@sektek/base:github', function () {
       );
 
       expect(githubClient.resolveToken).to.have.been.calledBefore(
+        githubClient.repoExists,
+      );
+      expect(githubClient.repoExists).to.have.been.calledBefore(
         githubClient.createRepo,
       );
       expect(githubClient.createRepo).to.have.been.calledBefore(
@@ -187,6 +199,54 @@ describe('@sektek/base:github', function () {
       expect(githubClient.createRepo).to.have.been.calledWith(
         sinon.match.any,
         sinon.match({ name: instance.projectSlug }),
+      );
+    });
+  });
+
+  describe('when the target repo already exists', function () {
+    it('throws before creating/pushing anything, naming the owner and repo', async function () {
+      const githubClient = fakeGithubClient();
+      githubClient.repoExists.resolves({ exists: true, owner: 'someone' });
+
+      try {
+        await run({ gitInit: false, createRepo: true, githubClient });
+        expect.fail('expected run to throw');
+      } catch (err) {
+        expect((err as Error).message).to.include('someone/');
+        expect((err as Error).message).to.include('already exists');
+      }
+
+      expect(githubClient.createRepo).not.to.have.been.called;
+      expect(githubClient.addRemote).not.to.have.been.called;
+      expect(githubClient.push).not.to.have.been.called;
+    });
+
+    it('names the resolved owner, not "undefined", when repoOwner was omitted', async function () {
+      const githubClient = fakeGithubClient();
+      githubClient.repoExists.resolves({ exists: true, owner: 'someone' });
+
+      try {
+        await run({ gitInit: false, createRepo: true, githubClient });
+        expect.fail('expected run to throw');
+      } catch (err) {
+        expect((err as Error).message).not.to.include('undefined/');
+      }
+    });
+
+    it('checks against repoOwner when given', async function () {
+      const githubClient = fakeGithubClient();
+      githubClient.repoExists.resolves({ exists: false, owner: 'some-org' });
+
+      await run({
+        gitInit: false,
+        createRepo: true,
+        repoOwner: 'some-org',
+        githubClient,
+      });
+
+      expect(githubClient.repoExists).to.have.been.calledOnceWith(
+        sinon.match.any,
+        sinon.match({ owner: 'some-org' }),
       );
     });
   });

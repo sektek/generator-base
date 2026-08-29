@@ -35,6 +35,20 @@ export type CreateRepoResult = {
   htmlUrl: string;
 };
 
+export type RepoExistsOptions = {
+  owner?: string;
+  name: string;
+};
+
+export type RepoExistsResult = {
+  exists: boolean;
+  // The owner actually checked against — `opts.owner` when given, or the
+  // authenticated user's own login when it wasn't. Callers that omitted
+  // `owner` don't otherwise know whose account got checked; this lets an
+  // error message name the real account instead of saying "your account".
+  owner: string;
+};
+
 /**
  * Builds an `Error` from a failed Octokit request, in this module's own
  * message format — kept independent of however Octokit itself words a
@@ -69,6 +83,37 @@ export async function getAuthenticatedUser(
     const { data } = await client(auth).users.getAuthenticated();
     return { login: data.login };
   } catch (error) {
+    throw toRequestError(error);
+  }
+}
+
+/**
+ * Checks whether `opts.name` already exists under `opts.owner` (or under
+ * the authenticated user's own account when `opts.owner` is omitted) —
+ * meant to be called *before* scaffolding/committing anything, so a
+ * name collision fails fast instead of surfacing only once `createRepo`
+ * itself 422s much later, after local work has already happened.
+ *
+ * @param auth - How to authenticate.
+ * @param opts - The repo to check for.
+ * @returns Whether it exists, and the owner actually checked.
+ */
+export async function repoExists(
+  auth: ApiOptions,
+  opts: RepoExistsOptions,
+): Promise<RepoExistsResult> {
+  const octokit = client(auth);
+  const owner =
+    opts.owner ?? (await octokit.users.getAuthenticated()).data.login;
+
+  try {
+    await octokit.repos.get({ owner, repo: opts.name });
+    return { exists: true, owner };
+  } catch (error) {
+    if (error instanceof Error && 'status' in error && error.status === 404) {
+      return { exists: false, owner };
+    }
+
     throw toRequestError(error);
   }
 }

@@ -24,6 +24,11 @@ export class GithubGenerator extends BaseGenerator<
   GithubGeneratorOptions,
   BaseFeatures
 > {
+  // Resolved once in taskInitializing (alongside the repo-exists safety
+  // check, which needs a token to call the API anyway) and reused in
+  // taskEnd, rather than resolving the token a second time there.
+  #auth?: ApiOptions;
+
   constructor(
     args: string[],
     options: GithubGeneratorOptions,
@@ -36,6 +41,31 @@ export class GithubGenerator extends BaseGenerator<
   }
 
   async taskInitializing() {
+    const { options } = this;
+
+    if (options.createRepo) {
+      const client = options.githubClient ?? defaultGithubClient();
+      const token = await client.resolveToken(options.githubToken);
+      this.#auth = { token };
+
+      // Fail fast, before any scaffolding/git work happens: without this,
+      // a name collision only surfaces from createRepo's own 422 in
+      // taskEnd, by which point `git` has already inited and committed
+      // locally for nothing.
+      const { exists, owner } = await client.repoExists(this.#auth, {
+        owner: options.repoOwner,
+        name: this.projectSlug,
+      });
+      if (exists) {
+        throw new Error(
+          `GitHub repo '${owner}/${this.projectSlug}' already exists. ` +
+            'Choose a different destination directory, pass --repo-owner ' +
+            'to target a different account/org, or delete the existing ' +
+            'repo first.',
+        );
+      }
+    }
+
     await this.composeWith('git', this.options, true);
   }
 
@@ -45,8 +75,9 @@ export class GithubGenerator extends BaseGenerator<
 
     const client = options.githubClient ?? defaultGithubClient();
     const cwd = this.destinationRoot();
-    const token = await client.resolveToken(options.githubToken);
-    const auth: ApiOptions = { token };
+    // Set in taskInitializing whenever createRepo is true, which is the
+    // only way taskEnd reaches this point.
+    const auth = this.#auth!;
     const visibility = options.repoVisibility ?? 'private';
 
     const repo = await client.createRepo(auth, {
