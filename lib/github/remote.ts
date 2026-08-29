@@ -25,6 +25,12 @@ export async function addRemote(
  * header rather than embedding the token in the remote URL or persisting it
  * to `.git/config`.
  *
+ * The header is passed via `GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_0`/
+ * `GIT_CONFIG_VALUE_0` environment variables (git >=2.31), not a `-c
+ * http.extraHeader=...` argv flag — a token embedded in argv is visible to
+ * any local user via `ps`/process listings; passed via the child process's
+ * own environment instead, it isn't.
+ *
  * @param cwd - The local repository's working directory.
  * @param auth - How to authenticate the push.
  * @param remote - The remote to push to, e.g. `origin`.
@@ -37,16 +43,13 @@ export async function push(
   branch: string,
 ): Promise<void> {
   const execFileAsync = promisify(childProcess.execFile);
-  await execFileAsync(
-    'git',
-    [
-      '-c',
-      `http.extraHeader=AUTHORIZATION: bearer ${auth.token}`,
-      'push',
-      '-u',
-      remote,
-      branch,
-    ],
-    { cwd },
-  );
+  await execFileAsync('git', ['push', '-u', remote, branch], {
+    cwd,
+    env: {
+      ...process.env,
+      GIT_CONFIG_COUNT: '1',
+      GIT_CONFIG_KEY_0: 'http.extraHeader',
+      GIT_CONFIG_VALUE_0: `AUTHORIZATION: bearer ${auth.token}`,
+    },
+  });
 }

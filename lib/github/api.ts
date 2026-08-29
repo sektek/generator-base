@@ -98,9 +98,19 @@ export async function createRepo(
       ? await octokit.repos.createInOrg({ org: opts.owner, ...params })
       : await octokit.repos.createForAuthenticatedUser(params);
 
+    // Octokit's types mark clone_url/ssh_url nullable, but GitHub always
+    // returns them for a repo it just created — failing loudly here beats
+    // silently handing a caller an empty-string url that only breaks much
+    // later, in a git command, with no indication why.
+    if (!data.clone_url || !data.ssh_url) {
+      throw new Error(
+        `GitHub created repo '${opts.name}' but its response was missing clone_url/ssh_url`,
+      );
+    }
+
     return {
-      cloneUrl: data.clone_url ?? '',
-      sshUrl: data.ssh_url ?? '',
+      cloneUrl: data.clone_url,
+      sshUrl: data.ssh_url,
       htmlUrl: data.html_url,
     };
   } catch (error) {

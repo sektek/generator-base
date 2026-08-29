@@ -17,7 +17,9 @@ describe('lib/github/remote', function () {
     execFileStub = sandbox
       .stub(childProcess, 'execFile')
       // @ts-expect-error - sinon's fake doesn't match execFile's overloads
-      .callsArgWith(3, null, { stdout: '', stderr: '' });
+      // Node's real execFile callback is (error, stdout, stderr) — three
+      // separate arguments, not one { stdout, stderr } object.
+      .callsArgWith(3, null, '', '');
   });
 
   afterEach(function () {
@@ -37,31 +39,34 @@ describe('lib/github/remote', function () {
   });
 
   describe('push', function () {
-    it('shells out to `git push` with a per-invocation auth header', async function () {
+    it('shells out to `git push -u <remote> <branch>`', async function () {
       await push('/repo', { token: 'a-token' }, 'origin', 'main');
 
       expect(execFileStub).to.have.been.calledWith(
         'git',
-        [
-          '-c',
-          'http.extraHeader=AUTHORIZATION: bearer a-token',
-          'push',
-          '-u',
-          'origin',
-          'main',
-        ],
-        { cwd: '/repo' },
+        ['push', '-u', 'origin', 'main'],
+        sinon.match({ cwd: '/repo' }),
       );
     });
 
-    it('passes the token only via the extraHeader flag, not the remote arg', async function () {
+    it('authenticates via GIT_CONFIG_* env vars, never argv', async function () {
       await push('/repo', { token: 'a-token' }, 'origin', 'main');
 
-      const [, args] = execFileStub.firstCall.args as [string, string[]];
-      expect(args[args.length - 2]).to.equal('origin');
-      expect(args.filter(arg => arg.includes('a-token'))).to.deep.equal([
-        'http.extraHeader=AUTHORIZATION: bearer a-token',
-      ]);
+      const [, args, options] = execFileStub.firstCall.args as [
+        string,
+        string[],
+        { env?: Record<string, string> },
+      ];
+
+      // The whole point: a token in argv is visible to any local user via
+      // `ps`/process listings. Passed via the child process's own
+      // environment instead, it isn't.
+      expect(args.some(arg => arg.includes('a-token'))).to.be.false;
+      expect(options.env).to.deep.include({
+        GIT_CONFIG_COUNT: '1',
+        GIT_CONFIG_KEY_0: 'http.extraHeader',
+        GIT_CONFIG_VALUE_0: 'AUTHORIZATION: bearer a-token',
+      });
     });
   });
 });
