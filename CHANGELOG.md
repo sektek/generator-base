@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0](https://github.com/sektek/generator-base/compare/v0.2.0...v0.3.0) (2026-08-29)
+
+### Features
+
+* **github:** add GitHub API/token/remote helper modules ([#3](https://github.com/sektek/generator-base/issues/3)) ([ad2f6cb](https://github.com/sektek/generator-base/commit/ad2f6cb2a8169446b934454a9cdf74788611d475))
+
 ## [0.2.0](https://github.com/sektek/generator-base/compare/v0.1.0...v0.2.0) (2026-08-29)
 
 ### Features
