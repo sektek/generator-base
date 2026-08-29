@@ -21,9 +21,14 @@ const run = () =>
       join(__dirname, '../editorconfig/index.js'),
       { namespace: '@sektek/base:editorconfig' },
     ],
+    [join(__dirname, '../git/index.js'), { namespace: '@sektek/base:git' }],
     [
       join(__dirname, '../gitconfig/index.js'),
       { namespace: '@sektek/base:gitconfig' },
+    ],
+    [
+      join(__dirname, '../github/index.js'),
+      { namespace: '@sektek/base:github' },
     ],
     [
       join(__dirname, '../readme/index.js'),
