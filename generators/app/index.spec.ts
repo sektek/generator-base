@@ -15,25 +15,41 @@ const generator = join(__dirname, 'index.js');
 // has nothing registered under those namespaces by default, so each
 // sub-generator must be registered by path (so its templates/ dir still
 // resolves) under the namespace app will compose it as.
+//
+// gitInit: false — these tests are about composition (each sub-generator
+// produces its expected files), not git's own behavior (already covered by
+// its own fully-mocked spec). Without this, git's real taskEnd runs a real
+// `git init`/`git commit` against the test's on-disk temp fixture, which
+// depends on the running machine having a git identity configured — CI
+// runners don't by default, so this was failing in CI with "Please tell me
+// who you are" even though it could pass on a contributor's own machine.
 const run = () =>
-  helper.run(generator).withGenerators([
-    [
-      join(__dirname, '../editorconfig/index.js'),
-      { namespace: '@sektek/base:editorconfig' },
-    ],
-    [
-      join(__dirname, '../gitconfig/index.js'),
-      { namespace: '@sektek/base:gitconfig' },
-    ],
-    [
-      join(__dirname, '../readme/index.js'),
-      { namespace: '@sektek/base:readme' },
-    ],
-    [
-      join(__dirname, '../devcontainer/index.js'),
-      { namespace: '@sektek/base:devcontainer' },
-    ],
-  ]);
+  helper
+    .run(generator)
+    .withOptions({ gitInit: false })
+    .withGenerators([
+      [
+        join(__dirname, '../editorconfig/index.js'),
+        { namespace: '@sektek/base:editorconfig' },
+      ],
+      [join(__dirname, '../git/index.js'), { namespace: '@sektek/base:git' }],
+      [
+        join(__dirname, '../gitconfig/index.js'),
+        { namespace: '@sektek/base:gitconfig' },
+      ],
+      [
+        join(__dirname, '../github/index.js'),
+        { namespace: '@sektek/base:github' },
+      ],
+      [
+        join(__dirname, '../readme/index.js'),
+        { namespace: '@sektek/base:readme' },
+      ],
+      [
+        join(__dirname, '../devcontainer/index.js'),
+        { namespace: '@sektek/base:devcontainer' },
+      ],
+    ]);
 
 describe('@sektek/base:app', function () {
   it('generates using AppGenerator', async function () {
