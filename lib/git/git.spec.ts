@@ -18,7 +18,11 @@ describe('lib/git/git', function () {
     execFileStub = sandbox
       .stub(childProcess, 'execFile')
       // @ts-expect-error - sinon's fake doesn't match execFile's overloads
-      .callsArgWith(3, null, { stdout: '', stderr: '' });
+      // Node's real execFile callback is (error, stdout, stderr) — three
+      // separate arguments, not one { stdout, stderr } object — matching
+      // that here so a future change that reads stdout/stderr wouldn't
+      // silently misread a stubbed shape that the real callback never sends.
+      .callsArgWith(3, null, '', '');
   });
 
   afterEach(function () {
