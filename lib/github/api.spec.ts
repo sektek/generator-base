@@ -133,5 +133,23 @@ describe('lib/github/api', function () {
         );
       }
     });
+
+    it('throws when the response is missing clone_url/ssh_url', async function () {
+      fetchStub.resolves(
+        jsonResponse(201, {
+          clone_url: null,
+          ssh_url: null,
+          html_url: 'https://github.com/octocat/repo',
+        }),
+      );
+
+      try {
+        await createRepo({ token: 'a-token' }, { name: 'repo', private: true });
+        expect.fail('expected createRepo to throw');
+      } catch (err) {
+        expect((err as Error).message).to.include('repo');
+        expect((err as Error).message).to.include('clone_url');
+      }
+    });
   });
 });
