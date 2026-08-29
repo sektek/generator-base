@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/sektek/generator-base/compare/v0.3.0...v0.4.0) (2026-08-29)
+
+### Features
+
+* **git:** add git sub-generator to init and commit scaffolded projects ([#4](https://github.com/sektek/generator-base/issues/4)) ([e95ec7f](https://github.com/sektek/generator-base/commit/e95ec7f3caa1c09edd93e3584aa55bc9acff194a)), closes [#shouldInitAndCommit](https://github.com/sektek/generator-base/issues/shouldInitAndCommit)
+* **github:** add github sub-generator to create and push a GitHub repo ([#5](https://github.com/sektek/generator-base/issues/5)) ([54989c6](https://github.com/sektek/generator-base/commit/54989c66a8ee96570ce782f65cf029a11d14011e)), closes [#auth](https://github.com/sektek/generator-base/issues/auth)
+
 ## [0.3.0](https://github.com/sektek/generator-base/compare/v0.2.0...v0.3.0) (2026-08-29)
 
 ### Features
