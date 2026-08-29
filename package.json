@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "^10.0.6",
-    "@sektek/eslint-plugin": "^2",
+    "@sektek/eslint-plugin": "^3",
     "@sektek/generator-test": "^0.1.0",
     "@sektek/prettier-config": "^2",
     "@types/chai": "^5.2.3",
