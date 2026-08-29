@@ -1,82 +1,69 @@
-import { createRequire } from 'node:module';
+import childProcess from 'node:child_process';
+import fs from 'node:fs';
 
-import { expect } from 'chai';
-import sinon from 'sinon';
+import { expect, use } from 'chai';
+import sinon, { SinonSandbox, SinonStub } from 'sinon';
+import sinonChai from 'sinon-chai';
 
 import { commitAll, ensureRepoInitialized } from './git.js';
 
-// Same `createRequire` object git.ts itself resolves `execFile`/`existsSync`
-// off of — see the comment in git.ts for why a plain `import` can't be
-// stubbed here.
-const require = createRequire(import.meta.url);
-const childProcess =
-  require('node:child_process') as typeof import('node:child_process');
-const fs = require('node:fs') as typeof import('node:fs');
+use(sinonChai);
 
-type ExecFileNodeStyleCompletion = (
-  error: Error | null,
-  stdout: string,
-  stderr: string,
-) => void;
+describe('lib/git/git', function () {
+  let sandbox: SinonSandbox;
+  let execFileStub: SinonStub;
 
-const stubExecFileSuccess = () =>
-  sinon.stub(childProcess, 'execFile').callsFake((...args: unknown[]) => {
-    const onComplete = args[args.length - 1] as ExecFileNodeStyleCompletion;
-    onComplete(null, '', '');
-    return {} as ReturnType<typeof childProcess.execFile>;
+  beforeEach(function () {
+    sandbox = sinon.createSandbox();
+    execFileStub = sandbox
+      .stub(childProcess, 'execFile')
+      // @ts-expect-error - sinon's fake doesn't match execFile's overloads
+      .callsArgWith(3, null, { stdout: '', stderr: '' });
   });
 
-describe('git', function () {
   afterEach(function () {
-    sinon.restore();
+    sandbox.restore();
   });
 
   describe('ensureRepoInitialized', function () {
     it('does not run git init and returns false when .git already exists', async function () {
-      sinon.stub(fs, 'existsSync').returns(true);
-      const execFileStub = stubExecFileSuccess();
+      sandbox.stub(fs, 'existsSync').returns(true);
 
       const result = await ensureRepoInitialized('/repo');
 
       expect(result).to.be.false;
-      expect(execFileStub.called).to.be.false;
+      expect(execFileStub).not.to.have.been.called;
     });
 
     it('runs git init -b main and returns true when .git does not exist', async function () {
-      sinon.stub(fs, 'existsSync').returns(false);
-      const execFileStub = stubExecFileSuccess();
+      sandbox.stub(fs, 'existsSync').returns(false);
 
       const result = await ensureRepoInitialized('/repo');
 
       expect(result).to.be.true;
-      expect(execFileStub.calledOnce).to.be.true;
-      expect(execFileStub.firstCall.args[0]).to.equal('git');
-      expect(execFileStub.firstCall.args[1]).to.deep.equal([
-        'init',
-        '-b',
-        'main',
-      ]);
-      expect(execFileStub.firstCall.args[2]).to.deep.equal({ cwd: '/repo' });
+      expect(execFileStub).to.have.been.calledOnceWith(
+        'git',
+        ['init', '-b', 'main'],
+        { cwd: '/repo' },
+      );
     });
   });
 
   describe('commitAll', function () {
     it('runs git add -A then git commit -m <message>, in order', async function () {
-      const execFileStub = stubExecFileSuccess();
+      await commitAll('/repo', 'Initial commit');
 
-      await commitAll('/repo', 'feat: initial commit');
-
-      expect(execFileStub.calledTwice).to.be.true;
-      expect(execFileStub.firstCall.args[0]).to.equal('git');
-      expect(execFileStub.firstCall.args[1]).to.deep.equal(['add', '-A']);
-      expect(execFileStub.firstCall.args[2]).to.deep.equal({ cwd: '/repo' });
-      expect(execFileStub.secondCall.args[0]).to.equal('git');
-      expect(execFileStub.secondCall.args[1]).to.deep.equal([
-        'commit',
-        '-m',
-        'feat: initial commit',
-      ]);
-      expect(execFileStub.secondCall.args[2]).to.deep.equal({ cwd: '/repo' });
+      expect(execFileStub).to.have.been.calledTwice;
+      expect(execFileStub.firstCall).to.have.been.calledWith(
+        'git',
+        ['add', '-A'],
+        { cwd: '/repo' },
+      );
+      expect(execFileStub.secondCall).to.have.been.calledWith(
+        'git',
+        ['commit', '-m', 'Initial commit'],
+        { cwd: '/repo' },
+      );
     });
   });
 });

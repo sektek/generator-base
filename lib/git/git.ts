@@ -1,21 +1,7 @@
-import { createRequire } from 'node:module';
+import childProcess from 'node:child_process';
+import fs from 'node:fs';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-
-// Resolved via `createRequire` rather than a plain `import`: sinon can't
-// stub a property on an ES module namespace object (they're non-writable),
-// and a `promisify`d function captured from a plain `import` at
-// module-load time wouldn't observe a stub installed afterwards either,
-// since that capture happens before any test gets a chance to install one.
-// `createRequire` instead hands back the same, ordinary (and therefore
-// stubbable) object Node's own CommonJS module cache uses for these two
-// built-ins — both this module and its spec resolve `execFile`/`existsSync`
-// off of it fresh on every access, so a stub sinon installs on either
-// object is visible to the other.
-const require = createRequire(import.meta.url);
-const childProcess =
-  require('node:child_process') as typeof import('node:child_process');
-const fs = require('node:fs') as typeof import('node:fs');
 
 /**
  * Runs `git <args>` in `cwd`.
@@ -24,7 +10,8 @@ const fs = require('node:fs') as typeof import('node:fs');
  * @param args - The git subcommand and its arguments.
  */
 async function run(cwd: string, args: string[]): Promise<void> {
-  await promisify(childProcess.execFile)('git', args, { cwd });
+  const execFileAsync = promisify(childProcess.execFile);
+  await execFileAsync('git', args, { cwd });
 }
 
 /**
