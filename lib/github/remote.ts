@@ -31,6 +31,16 @@ export async function addRemote(
  * any local user via `ps`/process listings; passed via the child process's
  * own environment instead, it isn't.
  *
+ * The header itself is HTTP Basic auth (base64 `x-access-token:<token>`),
+ * not `Authorization: bearer <token>` — confirmed against a real GitHub
+ * repo: GitHub's git-over-HTTPS endpoint rejects a bearer scheme here with
+ * "invalid credentials" even though the exact same token works fine as a
+ * bearer token against the REST API (used elsewhere in this module via
+ * Octokit). `x-access-token` is GitHub's own documented convention for the
+ * Basic-auth username when the password is a token rather than an actual
+ * account password — any non-empty username works, but this is the
+ * canonical one to use.
+ *
  * @param cwd - The local repository's working directory.
  * @param auth - How to authenticate the push.
  * @param remote - The remote to push to, e.g. `origin`.
@@ -43,13 +53,17 @@ export async function push(
   branch: string,
 ): Promise<void> {
   const execFileAsync = promisify(childProcess.execFile);
+  const basicAuth = Buffer.from(`x-access-token:${auth.token}`).toString(
+    'base64',
+  );
+
   await execFileAsync('git', ['push', '-u', remote, branch], {
     cwd,
     env: {
       ...process.env,
       GIT_CONFIG_COUNT: '1',
       GIT_CONFIG_KEY_0: 'http.extraHeader',
-      GIT_CONFIG_VALUE_0: `AUTHORIZATION: bearer ${auth.token}`,
+      GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${basicAuth}`,
     },
   });
 }
