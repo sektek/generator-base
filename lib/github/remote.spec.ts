@@ -65,8 +65,28 @@ describe('lib/github/remote', function () {
       expect(options.env).to.deep.include({
         GIT_CONFIG_COUNT: '1',
         GIT_CONFIG_KEY_0: 'http.extraHeader',
-        GIT_CONFIG_VALUE_0: 'AUTHORIZATION: bearer a-token',
       });
+    });
+
+    it('authenticates with HTTP Basic (x-access-token:<token>), not a bearer scheme', async function () {
+      // Confirmed against a real GitHub repo: GitHub's git-over-HTTPS
+      // endpoint rejects `Authorization: bearer <token>` here with "invalid
+      // credentials", even though the identical token works fine as a
+      // bearer token against the REST API elsewhere in this module.
+      await push('/repo', { token: 'a-token' }, 'origin', 'main');
+
+      const [, , options] = execFileStub.firstCall.args as [
+        string,
+        string[],
+        { env?: Record<string, string> },
+      ];
+      const expectedAuth = Buffer.from('x-access-token:a-token').toString(
+        'base64',
+      );
+
+      expect(options.env?.GIT_CONFIG_VALUE_0).to.equal(
+        `AUTHORIZATION: basic ${expectedAuth}`,
+      );
     });
   });
 });
