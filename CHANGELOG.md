@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.1](https://github.com/sektek/generator-base/compare/v0.5.0...v0.5.1) (2026-09-01)
+
+### Bug Fixes
+
+* **lib/github:** use HTTP Basic auth for git push, not a bearer scheme ([#8](https://github.com/sektek/generator-base/issues/8)) ([e31dc1c](https://github.com/sektek/generator-base/commit/e31dc1c08475418d00915fa78b98e2c031c19406)), closes [remote.ts#push](https://github.com/sektek/remote.ts/issues/push)
+
 ## [0.5.0](https://github.com/sektek/generator-base/compare/v0.4.0...v0.5.0) (2026-08-29)
 
 ### Features
