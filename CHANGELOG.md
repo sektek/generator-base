@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.0](https://github.com/sektek/generator-base/compare/v0.5.1...v0.6.0) (2026-09-05)
+
+### Features
+
+* expose GithubClient/defaultGithubClient from package root ([#9](https://github.com/sektek/generator-base/issues/9)) ([5195228](https://github.com/sektek/generator-base/commit/51952280988bba991441c5d60e5d5490bd242e1f))
+
 ## [0.5.1](https://github.com/sektek/generator-base/compare/v0.5.0...v0.5.1) (2026-09-01)
 
 ### Bug Fixes
