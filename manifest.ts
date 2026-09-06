@@ -1,5 +1,6 @@
 export const GENERATORS = [
   'app',
+  'config',
   'editorconfig',
   'git',
   'github',

@@ -53,4 +53,26 @@ export type BaseOptions = CoreOptions & {
    * `'MIT'`. Defaults to `undefined` (an empty copyright line).
    */
   author?: string;
+
+  /**
+   * The full path (absolute, or relative to the destination root) to write
+   * this run's `gen.config.*` file to. Its extension selects the format
+   * (`.js`/`.yaml`/`.yml`/`.json`). Defaults to `gen.config.yaml` directly
+   * under the destination root when omitted.
+   */
+  configFile?: string;
+
+  /**
+   * The subset of this run's option keys that were explicitly supplied by
+   * the caller this run (a real CLI flag, or an interactive wizard answer)
+   * rather than a schema default silently filled in. Populated by
+   * `tools/gen`'s CLI (its own `flagsGiven`) before the generator run
+   * starts — the `config` sub-generator uses it to decide which values to
+   * actually populate in `gen.config.*` versus leave as a commented-out
+   * placeholder. Left undefined by a caller outside that CLI (e.g. a
+   * generator run directly via `@sektek/generator-test`'s helper); `config`
+   * then falls back to treating every key present on `this.options` as
+   * explicit.
+   */
+  explicitOptionKeys?: string[];
 };
