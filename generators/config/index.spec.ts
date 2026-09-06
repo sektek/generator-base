@@ -167,4 +167,44 @@ describe('@sektek/base:config', function () {
     expect(content).to.not.include('explicitOptionKeys');
     expect(content).to.not.include('configFile');
   });
+
+  it('never writes yeoman-generator/yeoman-environment-injected plumbing options into the config file', async function () {
+    // Regression: a real `gen js:app`/`gen base:app` run (not this test's
+    // own lightweight harness) has yeoman-environment inject these onto
+    // *every* composed generator's own this.options, alongside real
+    // config values -- confirmed via a manual end-to-end run, since
+    // @sektek/generator-test's helper doesn't reproduce the full
+    // environment machinery that injects them.
+    const { fs } = await helper.run(generator).withOptions({
+      explicitOptionKeys: [],
+      namespace: '@sektek/base:config',
+      resolved: '/some/path/to/generators/config/index.js',
+      sharedData: {},
+      askAnswered: false,
+      forceInstall: false,
+      forwardErrorToEnvironment: false,
+      initialGenerator: true,
+      skipCache: false,
+      skipLocalCache: true,
+      skipParseOptions: false,
+      localConfigOnly: false,
+    });
+
+    const content = fs.read('gen.config.yaml');
+    for (const key of [
+      'namespace',
+      'resolved',
+      'sharedData',
+      'askAnswered',
+      'forceInstall',
+      'forwardErrorToEnvironment',
+      'initialGenerator',
+      'skipCache',
+      'skipLocalCache',
+      'skipParseOptions',
+      'localConfigOnly',
+    ]) {
+      expect(content, `expected ${key} to be excluded`).to.not.include(key);
+    }
+  });
 });

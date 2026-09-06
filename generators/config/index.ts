@@ -29,21 +29,47 @@ type ConfigFormat = (typeof CONFIG_FORMATS)[number];
 
 // Options that describe *how*/*where* this run happens, not a scaffolded
 // project's own configuration — never written into gen.config.*, even if
-// this run supplied them "explicitly". Kebab-case spellings are included
-// alongside each camelCase one: @sektek/generator-test's helper.withOptions
-// mirrors every option it's given under both spellings (matching a legacy
-// meow-parsing convention), so a real test run of this generator can see
-// e.g. both `configFile` and `config-file` as own keys of `this.options`
-// even though only the camelCase form is ever real in production (Yeoman's
-// own composeWith/Environment#run never do this).
+// this run "explicitly" supplied them. Two different sources leak
+// plumbing keys onto `this.options` alongside real config values:
+//
+// - yeoman-generator/yeoman-environment themselves inject a small, fixed
+//   set of framework-internal keys into every generator instance's own
+//   options (found by reading yeoman-environment's loadSharedOptions()/
+//   instantiate() — e.g. `namespace`/`resolved` get overwritten to *this*
+//   generator's own identity, not whatever CoreOptions.namespace the
+//   caller passed in). Not exported as a named list upstream, so this is
+//   a hand-maintained best-effort set that may need updating if a future
+//   yeoman-generator/yeoman-environment release adds more.
+// - @sektek/generator-test's own helper.withOptions() mirrors every
+//   option it's given under both camelCase *and* kebab-case spellings
+//   (matching a legacy meow-parsing convention), so a real test run of
+//   this generator can see e.g. both `configFile` and `config-file` as
+//   own keys of `this.options` even though only the camelCase form is
+//   ever real in production.
+//
+// Handled together: any key containing a hyphen is skipped outright
+// (never a real key in this codebase's own camelCase-only option schema),
+// plus this explicit denylist of camelCase plumbing keys.
 const NON_CONFIG_OPTION_KEYS = new Set<string>([
+  // This generator's own run-plumbing options.
   'configFile',
-  'config-file',
   'explicitOptionKeys',
-  'explicit-option-keys',
   'force',
   'destinationRoot',
-  'destination-root',
+  // yeoman-generator/yeoman-environment's own injected options.
+  '_',
+  'env',
+  'namespace',
+  'resolved',
+  'sharedData',
+  'askAnswered',
+  'forceInstall',
+  'forwardErrorToEnvironment',
+  'initialGenerator',
+  'skipCache',
+  'skipLocalCache',
+  'skipParseOptions',
+  'localConfigOnly',
 ]);
 
 type ConfigEntry = {
@@ -205,7 +231,7 @@ export class ConfigGenerator extends BaseGenerator<
 
     const entries: ConfigEntry[] = [];
     for (const key of keys) {
-      if (NON_CONFIG_OPTION_KEYS.has(key)) continue;
+      if (key.includes('-') || NON_CONFIG_OPTION_KEYS.has(key)) continue;
 
       const optionValue = options[key];
       if (typeof optionValue === 'function') continue;
