@@ -4,6 +4,7 @@ export const GENERATORS = [
   'git',
   'github',
   'gitconfig',
+  'license',
   'readme',
   'devcontainer',
   'workspace',

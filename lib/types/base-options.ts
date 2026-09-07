@@ -39,4 +39,18 @@ export type BaseOptions = CoreOptions & {
    * pushing.
    */
   push?: boolean;
+
+  /**
+   * SPDX license identifier for the generated project. Only `'MIT'` is
+   * currently recognized as scaffolding a `LICENSE` file (naming `author`
+   * as the copyright holder) — every other value, including the default
+   * `'UNLICENSED'`, scaffolds no file at all.
+   */
+  license?: string;
+
+  /**
+   * Copyright holder named in the `LICENSE` file when `license` is
+   * `'MIT'`. Defaults to `undefined` (an empty copyright line).
+   */
+  author?: string;
 };
