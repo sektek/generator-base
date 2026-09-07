@@ -32,7 +32,7 @@ export class LicenseGenerator extends BaseGenerator<
     if (license !== 'MIT') return;
 
     this.fs.copyTpl(
-      this.templatePath('LICENSE.ejs'),
+      this.templatePath('MIT.LICENSE.ejs'),
       this.destinationPath('LICENSE'),
       {
         year: new Date().getFullYear(),
