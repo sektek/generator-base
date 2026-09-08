@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.0](https://github.com/sektek/generator-base/compare/v0.6.0...v0.7.0) (2026-09-08)
+
+### Features
+
+* add license sub-generator (SEK-88) ([#11](https://github.com/sektek/generator-base/issues/11)) ([e4e0fe3](https://github.com/sektek/generator-base/commit/e4e0fe34d3c3cce93200a03d0a4b6c8fd4295764))
+
 ## [0.6.0](https://github.com/sektek/generator-base/compare/v0.5.1...v0.6.0) (2026-09-05)
 
 ### Features
