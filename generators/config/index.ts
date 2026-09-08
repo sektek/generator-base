@@ -19,6 +19,15 @@ const DEFAULT_FEATURES: Partial<BaseFeatures> = {
 const CONFIG_FORMATS = ['js', 'yaml', 'json'] as const;
 type ConfigFormat = (typeof CONFIG_FORMATS)[number];
 
+// Extensions to probe for each format when auto-discovering an existing
+// file — 'yaml' has two (checked in this order), matching what
+// #formatFromExtension already accepts from an explicit --config-file.
+const FORMAT_EXTENSIONS: Record<ConfigFormat, readonly string[]> = {
+  js: ['js'],
+  yaml: ['yaml', 'yml'],
+  json: ['json'],
+};
+
 // Run-plumbing keys (this generator's own, plus ones yeoman-generator/
 // yeoman-environment inject into every generator's this.options) — never
 // written into gen.config.*. Hyphenated keys are skipped too, alongside
@@ -122,9 +131,11 @@ export class ConfigGenerator extends BaseGenerator<
     }
 
     for (const format of CONFIG_FORMATS) {
-      const path = join(destinationRoot, `gen.config.${format}`);
-      if (this.fs.exists(path)) {
-        return { path, format };
+      for (const ext of FORMAT_EXTENSIONS[format]) {
+        const path = join(destinationRoot, `gen.config.${ext}`);
+        if (this.fs.exists(path)) {
+          return { path, format };
+        }
       }
     }
 

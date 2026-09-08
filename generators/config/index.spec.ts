@@ -97,6 +97,24 @@ describe('@sektek/base:config', function () {
     expect(content).to.include('# license: "UNLICENSED"');
   });
 
+  it('auto-discovers and merges into an existing gen.config.yml (not just .yaml)', async function () {
+    const { fs } = await helper
+      .run(generator)
+      .doInDir(dir => {
+        writeFileSync(join(dir, 'gen.config.yml'), 'author: "Existing"\n');
+      })
+      .withOptions({
+        explicitOptionKeys: [],
+        author: 'Should Not Overwrite',
+        license: 'UNLICENSED',
+      });
+
+    expect(fs.exists('gen.config.yaml')).to.be.false;
+    const content = fs.read('gen.config.yml');
+    expect(content).to.include('author: "Existing"');
+    expect(content).to.include('# license: "UNLICENSED"');
+  });
+
   it('lets an explicit value this run override a stale existing value', async function () {
     const { fs } = await helper
       .run(generator)
