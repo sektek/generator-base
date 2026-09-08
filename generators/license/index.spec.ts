@@ -10,6 +10,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const generator = join(__dirname, 'index.js');
 
+// Captured once, rather than calling new Date().getFullYear() inline in
+// each assertion below — otherwise a run straddling a year boundary
+// between the generator's own call and the test's could rarely disagree.
+const year = new Date().getFullYear();
+
 describe('@sektek/base:license', function () {
   it('generates using LicenseGenerator', async function () {
     const result = await helper.run(generator).withOptions({ license: 'MIT' });
@@ -27,7 +32,7 @@ describe('@sektek/base:license', function () {
       const content = fs.read('LICENSE');
       expect(content).to.match(/^MIT License/);
       expect(content).to.include(
-        `Copyright (c) ${new Date().getFullYear()} Edward Kelly <eddie@sektek.net>`,
+        `Copyright (c) ${year} Edward Kelly <eddie@sektek.net>`,
       );
     });
 
@@ -37,9 +42,7 @@ describe('@sektek/base:license', function () {
         .withOptions({ license: 'MIT' });
 
       expect(fs.exists('LICENSE')).to.be.true;
-      expect(fs.read('LICENSE')).to.include(
-        `Copyright (c) ${new Date().getFullYear()} \n`,
-      );
+      expect(fs.read('LICENSE')).to.include(`Copyright (c) ${year} \n`);
     });
   });
 
