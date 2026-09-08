@@ -3,6 +3,7 @@ import '../editorconfig/index.js';
 import '../git/index.js';
 import '../gitconfig/index.js';
 import '../github/index.js';
+import '../license/index.js';
 import '../readme/index.js';
 
 import { BaseConfig } from '../../lib/types/base-config.js';
@@ -44,6 +45,7 @@ export class AppGenerator extends BaseGenerator<
     await this.composeWith('git', options, true);
     await this.composeWith('gitconfig', options, true);
     await this.composeWith('github', options, true);
+    await this.composeWith('license', options, true);
     await this.composeWith('readme', options, true);
     await this.composeWith('devcontainer', options, true);
   }

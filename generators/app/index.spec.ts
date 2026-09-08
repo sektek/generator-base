@@ -23,10 +23,10 @@ const generator = join(__dirname, 'index.js');
 // depends on the running machine having a git identity configured — CI
 // runners don't by default, so this was failing in CI with "Please tell me
 // who you are" even though it could pass on a contributor's own machine.
-const run = () =>
+const run = (options: Record<string, unknown> = {}) =>
   helper
     .run(generator)
-    .withOptions({ gitInit: false })
+    .withOptions({ gitInit: false, ...options })
     .withGenerators([
       [
         join(__dirname, '../editorconfig/index.js'),
@@ -40,6 +40,10 @@ const run = () =>
       [
         join(__dirname, '../github/index.js'),
         { namespace: '@sektek/base:github' },
+      ],
+      [
+        join(__dirname, '../license/index.js'),
+        { namespace: '@sektek/base:license' },
       ],
       [
         join(__dirname, '../readme/index.js'),
@@ -71,6 +75,16 @@ describe('@sektek/base:app', function () {
   it('composes the readme generator', async function () {
     const { fs } = await run();
     expect(fs.exists('README.md')).to.be.true;
+  });
+
+  it('composes the license generator, writing no LICENSE by default', async function () {
+    const { fs } = await run();
+    expect(fs.exists('LICENSE')).to.be.false;
+  });
+
+  it('composes the license generator, writing a LICENSE when license is MIT', async function () {
+    const { fs } = await run({ license: 'MIT' });
+    expect(fs.exists('LICENSE')).to.be.true;
   });
 
   it('composes the devcontainer generator with the default profile', async function () {
