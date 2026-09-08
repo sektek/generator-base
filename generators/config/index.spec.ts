@@ -18,10 +18,6 @@ describe('@sektek/base:config', function () {
   let homedirStub: sinon.SinonStub;
 
   beforeEach(function () {
-    // Isolates the "a higher-up config already supplies this" checks from
-    // whatever the real machine's actual home directory happens to
-    // contain — resolveConfigDefaults() is exercised for real (not
-    // stubbed), just pointed at a controlled, empty-by-default directory.
     homeDir = mkdtempSync(join(tmpdir(), 'sektek-base-config-home-'));
     homedirStub = sinon.stub(os, 'homedir').returns(homeDir);
   });
@@ -169,12 +165,6 @@ describe('@sektek/base:config', function () {
   });
 
   it('never writes yeoman-generator/yeoman-environment-injected plumbing options into the config file', async function () {
-    // Regression: a real `gen js:app`/`gen base:app` run (not this test's
-    // own lightweight harness) has yeoman-environment inject these onto
-    // *every* composed generator's own this.options, alongside real
-    // config values -- confirmed via a manual end-to-end run, since
-    // @sektek/generator-test's helper doesn't reproduce the full
-    // environment machinery that injects them.
     const { fs } = await helper.run(generator).withOptions({
       explicitOptionKeys: [],
       namespace: '@sektek/base:config',

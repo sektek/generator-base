@@ -49,11 +49,6 @@ export class AppGenerator extends BaseGenerator<
     await this.composeWith('license', options, true);
     await this.composeWith('readme', options, true);
     await this.composeWith('devcontainer', options, true);
-    // Last: writes gen.config.* summarizing this run's resolved options,
-    // so it runs once every other composed generator has already
-    // contributed whatever it's going to (not that any of them currently
-    // write to gen.config.* themselves — just the most sensible ordering
-    // for a generator whose whole job is "record what this run did").
     await this.composeWith('config', options, true);
   }
 }
