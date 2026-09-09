@@ -29,6 +29,10 @@ const run = (options: Record<string, unknown> = {}) =>
     .withOptions({ gitInit: false, ...options })
     .withGenerators([
       [
+        join(__dirname, '../config/index.js'),
+        { namespace: '@sektek/base:config' },
+      ],
+      [
         join(__dirname, '../editorconfig/index.js'),
         { namespace: '@sektek/base:editorconfig' },
       ],
@@ -92,5 +96,10 @@ describe('@sektek/base:app', function () {
     expect(fs.exists('.devcontainer/devcontainer.json')).to.be.true;
     expect(fs.exists('.devcontainer/Dockerfile')).to.be.true;
     expect(fs.exists('.devcontainer/docker-compose.yml')).to.be.false;
+  });
+
+  it('composes the config generator', async function () {
+    const { fs } = await run();
+    expect(fs.exists('gen.config.yaml')).to.be.true;
   });
 });

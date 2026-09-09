@@ -1,3 +1,4 @@
+import '../config/index.js';
 import '../devcontainer/index.js';
 import '../editorconfig/index.js';
 import '../git/index.js';
@@ -48,6 +49,7 @@ export class AppGenerator extends BaseGenerator<
     await this.composeWith('license', options, true);
     await this.composeWith('readme', options, true);
     await this.composeWith('devcontainer', options, true);
+    await this.composeWith('config', options, true);
   }
 }
 
