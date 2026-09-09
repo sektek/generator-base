@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.0](https://github.com/sektek/generator-base/compare/v0.7.0...v0.8.0) (2026-09-09)
+
+### Features
+
+* add config sub-generator for gen.config.* files ([#10](https://github.com/sektek/generator-base/issues/10)) ([f5f6b85](https://github.com/sektek/generator-base/commit/f5f6b859ff882e515bbf1d4dd75488cfa4c4fcad))
+
 ## [0.7.0](https://github.com/sektek/generator-base/compare/v0.6.0...v0.7.0) (2026-09-08)
 
 ### Features
