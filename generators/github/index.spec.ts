@@ -64,9 +64,6 @@ type FakeGitClient = GitClient & {
   commitAll: SinonStub;
 };
 
-// For tests that need createRepo's flow to actually run (gitInit not
-// false), so the composed git generator hits a fake instead of touching a
-// real repo — same DI the git generator's own spec already relies on.
 function fakeGitClient(): FakeGitClient {
   return {
     isRepoInitialized: sinon.stub().resolves(false),

@@ -28,11 +28,6 @@ export class GithubGenerator extends BaseGenerator<
   // check, which needs a token to call the API anyway) and reused in
   // taskEnd, rather than resolving the token a second time there.
   #auth?: ApiOptions;
-  // Cached in taskInitializing, same reasoning as git/index.ts's own
-  // #shouldInitAndCommit: createRepo alone isn't enough to create+push a
-  // GitHub remote — that's impossible without a local git repo, and
-  // git/index.ts's own taskInitializing already no-ops when gitInit is
-  // false, so this only ever becomes true when both agree.
   #shouldCreateRepo = false;
 
   constructor(
