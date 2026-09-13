@@ -28,6 +28,7 @@ export class GithubGenerator extends BaseGenerator<
   // check, which needs a token to call the API anyway) and reused in
   // taskEnd, rather than resolving the token a second time there.
   #auth?: ApiOptions;
+  #shouldCreateRepo = false;
 
   constructor(
     args: string[],
@@ -42,8 +43,10 @@ export class GithubGenerator extends BaseGenerator<
 
   async taskInitializing() {
     const { options } = this;
+    this.#shouldCreateRepo =
+      Boolean(options.createRepo) && options.gitInit !== false;
 
-    if (options.createRepo) {
+    if (this.#shouldCreateRepo) {
       const client = options.githubClient ?? defaultGithubClient();
       const token = await client.resolveToken(options.githubToken);
       this.#auth = { token };
@@ -70,13 +73,13 @@ export class GithubGenerator extends BaseGenerator<
   }
 
   async taskEnd() {
-    const { options } = this;
-    if (!options.createRepo) return;
+    if (!this.#shouldCreateRepo) return;
 
+    const { options } = this;
     const client = options.githubClient ?? defaultGithubClient();
     const cwd = this.destinationRoot();
-    // Set in taskInitializing whenever createRepo is true, which is the
-    // only way taskEnd reaches this point.
+    // Set in taskInitializing whenever #shouldCreateRepo is true, which is
+    // the only way taskEnd reaches this point.
     const auth = this.#auth!;
     const visibility = options.repoVisibility ?? 'private';
 

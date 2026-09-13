@@ -6,6 +6,7 @@ import sinon, { SinonStub } from 'sinon';
 import { helper } from '@sektek/generator-test';
 import sinonChai from 'sinon-chai';
 
+import { GitClient } from '../../lib/git/client.js';
 import { GithubClient } from '../../lib/github/client.js';
 
 import { GithubGenerator } from './index.js';
@@ -56,6 +57,22 @@ function fakeGithubClient(): FakeGithubClient {
   };
 }
 
+type FakeGitClient = GitClient & {
+  isRepoInitialized: SinonStub;
+  isDestinationEmpty: SinonStub;
+  initRepo: SinonStub;
+  commitAll: SinonStub;
+};
+
+function fakeGitClient(): FakeGitClient {
+  return {
+    isRepoInitialized: sinon.stub().resolves(false),
+    isDestinationEmpty: sinon.stub().resolves(true),
+    initRepo: sinon.stub().resolves(),
+    commitAll: sinon.stub().resolves(),
+  };
+}
+
 describe('@sektek/base:github', function () {
   it('generates using GithubGenerator', async function () {
     const githubClient = fakeGithubClient();
@@ -81,8 +98,9 @@ describe('@sektek/base:github', function () {
   describe('when createRepo is true', function () {
     it('resolves the token, checks for a collision, creates the repo, adds the remote, and pushes, in order', async function () {
       const githubClient = fakeGithubClient();
+      const gitClient = fakeGitClient();
 
-      await run({ gitInit: false, createRepo: true, githubClient });
+      await run({ createRepo: true, githubClient, gitClient });
 
       expect(githubClient.resolveToken).to.have.been.calledOnceWith(undefined);
       expect(githubClient.repoExists).to.have.been.calledOnceWith(
@@ -118,8 +136,9 @@ describe('@sektek/base:github', function () {
 
     it('defaults visibility to private', async function () {
       const githubClient = fakeGithubClient();
+      const gitClient = fakeGitClient();
 
-      await run({ gitInit: false, createRepo: true, githubClient });
+      await run({ createRepo: true, githubClient, gitClient });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
         sinon.match.any,
@@ -129,12 +148,13 @@ describe('@sektek/base:github', function () {
 
     it('maps repoVisibility: "public" to private: false', async function () {
       const githubClient = fakeGithubClient();
+      const gitClient = fakeGitClient();
 
       await run({
-        gitInit: false,
         createRepo: true,
         repoVisibility: 'public',
         githubClient,
+        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -145,12 +165,13 @@ describe('@sektek/base:github', function () {
 
     it('maps repoVisibility: "private" to private: true', async function () {
       const githubClient = fakeGithubClient();
+      const gitClient = fakeGitClient();
 
       await run({
-        gitInit: false,
         createRepo: true,
         repoVisibility: 'private',
         githubClient,
+        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -161,12 +182,13 @@ describe('@sektek/base:github', function () {
 
     it('passes repoOwner through when given', async function () {
       const githubClient = fakeGithubClient();
+      const gitClient = fakeGitClient();
 
       await run({
-        gitInit: false,
         createRepo: true,
         repoOwner: 'some-org',
         githubClient,
+        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -177,8 +199,9 @@ describe('@sektek/base:github', function () {
 
     it('leaves owner undefined when repoOwner is omitted', async function () {
       const githubClient = fakeGithubClient();
+      const gitClient = fakeGitClient();
 
-      await run({ gitInit: false, createRepo: true, githubClient });
+      await run({ createRepo: true, githubClient, gitClient });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
         sinon.match.any,
@@ -188,11 +211,12 @@ describe('@sektek/base:github', function () {
 
     it('uses projectSlug as the repo name', async function () {
       const githubClient = fakeGithubClient();
+      const gitClient = fakeGitClient();
 
       const result = await run({
-        gitInit: false,
         createRepo: true,
         githubClient,
+        gitClient,
       });
 
       const instance = result.generator as GithubGenerator;
@@ -209,7 +233,7 @@ describe('@sektek/base:github', function () {
       githubClient.repoExists.resolves({ exists: true, owner: 'someone' });
 
       try {
-        await run({ gitInit: false, createRepo: true, githubClient });
+        await run({ createRepo: true, githubClient });
         expect.fail('expected run to throw');
       } catch (err) {
         expect((err as Error).message).to.include('someone/');
@@ -226,7 +250,7 @@ describe('@sektek/base:github', function () {
       githubClient.repoExists.resolves({ exists: true, owner: 'someone' });
 
       try {
-        await run({ gitInit: false, createRepo: true, githubClient });
+        await run({ createRepo: true, githubClient });
         expect.fail('expected run to throw');
       } catch (err) {
         expect((err as Error).message).not.to.include('undefined/');
@@ -236,12 +260,13 @@ describe('@sektek/base:github', function () {
     it('checks against repoOwner when given', async function () {
       const githubClient = fakeGithubClient();
       githubClient.repoExists.resolves({ exists: false, owner: 'some-org' });
+      const gitClient = fakeGitClient();
 
       await run({
-        gitInit: false,
         createRepo: true,
         repoOwner: 'some-org',
         githubClient,
+        gitClient,
       });
 
       expect(githubClient.repoExists).to.have.been.calledOnceWith(
@@ -254,17 +279,32 @@ describe('@sektek/base:github', function () {
   describe('when push is false', function () {
     it('runs every step except push', async function () {
       const githubClient = fakeGithubClient();
+      const gitClient = fakeGitClient();
 
       await run({
-        gitInit: false,
         createRepo: true,
         push: false,
         githubClient,
+        gitClient,
       });
 
       expect(githubClient.resolveToken).to.have.been.calledOnce;
       expect(githubClient.createRepo).to.have.been.calledOnce;
       expect(githubClient.addRemote).to.have.been.calledOnce;
+      expect(githubClient.push).not.to.have.been.called;
+    });
+  });
+
+  describe('when gitInit is false', function () {
+    it('skips repo creation entirely, even when createRepo is true', async function () {
+      const githubClient = fakeGithubClient();
+
+      await run({ gitInit: false, createRepo: true, githubClient });
+
+      expect(githubClient.resolveToken).not.to.have.been.called;
+      expect(githubClient.repoExists).not.to.have.been.called;
+      expect(githubClient.createRepo).not.to.have.been.called;
+      expect(githubClient.addRemote).not.to.have.been.called;
       expect(githubClient.push).not.to.have.been.called;
     });
   });
