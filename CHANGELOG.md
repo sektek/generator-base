@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.1](https://github.com/sektek/generator-base/compare/v0.8.0...v0.8.1) (2026-09-13)
+
+### Bug Fixes
+
+* **generator-base:** title-case the README heading instead of appname's raw casing ([#12](https://github.com/sektek/generator-base/issues/12)) ([ae09580](https://github.com/sektek/generator-base/commit/ae09580185fd9e20d39c7a8814caccef7b9b9055)), closes [Generator#determineAppname](https://github.com/sektek/Generator/issues/determineAppname) [CoreGenerator#projectSlug](https://github.com/sektek/CoreGenerator/issues/projectSlug)
+
 ## [0.8.0](https://github.com/sektek/generator-base/compare/v0.7.0...v0.8.0) (2026-09-09)
 
 ### Features
