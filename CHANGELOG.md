@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.2](https://github.com/sektek/generator-base/compare/v0.8.1...v0.8.2) (2026-09-13)
+
+### Bug Fixes
+
+* **generator-base:** skip GitHub repo creation when gitInit is declined ([#13](https://github.com/sektek/generator-base/issues/13)) ([64ae68f](https://github.com/sektek/generator-base/commit/64ae68f8e59f3bd954d80401b18010fe5a2f5aef)), closes [#shouldCreateRepo](https://github.com/sektek/generator-base/issues/shouldCreateRepo) [#shouldInitAndCommit](https://github.com/sektek/generator-base/issues/shouldInitAndCommit) [#shouldCreateRepo](https://github.com/sektek/generator-base/issues/shouldCreateRepo)
+
 ## [0.8.1](https://github.com/sektek/generator-base/compare/v0.8.0...v0.8.1) (2026-09-13)
 
 ### Bug Fixes
