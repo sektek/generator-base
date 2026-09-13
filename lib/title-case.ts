@@ -1,7 +1,8 @@
+import startCase from 'lodash/startCase.js';
+
 /**
  * Title-cases a hyphen-separated slug (e.g. `CoreGenerator#projectSlug`)
- * for display text (README headings, etc.): splits on `-` and
- * capitalizes each segment's first character.
+ * for display text (README headings, etc.).
  *
  * Deliberately not derived from `Generator#appname` — appname only
  * de-hyphenates (replacing `-`/`_` with a space) without changing case at
@@ -13,11 +14,7 @@
  * @returns The title-cased text (e.g. `'my-cool-project'` -> `'My Cool Project'`).
  */
 export function titleCase(slug: string): string {
-  return slug
-    .split('-')
-    .filter(Boolean)
-    .map(word => word[0].toUpperCase() + word.slice(1))
-    .join(' ');
+  return startCase(slug);
 }
 
 export default titleCase;

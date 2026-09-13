@@ -14,4 +14,10 @@ describe('titleCase', function () {
   it('ignores empty segments from a leading/trailing/doubled hyphen', function () {
     expect(titleCase('-my--project-')).to.equal('My Project');
   });
+
+  // lodash's startCase also splits on a letter/digit boundary within a
+  // single hyphen-segment, not just on '-' itself.
+  it('splits a letter directly followed by a digit into its own word', function () {
+    expect(titleCase('my-app2')).to.equal('My App 2');
+  });
 });
