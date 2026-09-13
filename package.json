@@ -44,6 +44,7 @@
     "@octokit/rest": "^22.0.1",
     "@sektek/generator": "^0.3.0",
     "@sektek/utility-belt": "^0.3.5",
+    "lodash": "^4.18.1",
     "tslib": "^2.8.1",
     "yaml": "^2.9.0",
     "yeoman-generator": "^8.2.2"
@@ -55,6 +56,7 @@
     "@sektek/prettier-config": "^2",
     "@types/chai": "^5.2.3",
     "@types/chai-as-promised": "^8.0.2",
+    "@types/lodash": "^4.17.25",
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.2.3",
     "@types/sinon": "^21.0.0",
