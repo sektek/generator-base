@@ -1,10 +1,17 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
+import { PredicateFn, ProviderFn, getComponent } from '@sektek/utility-belt';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
 
 import { AppGenerator } from './index.js';
+
+const context = { answers: {}, flagsGiven: {} };
+const provide = <T>(provider: unknown, ctx: typeof context = context) =>
+  getComponent<ProviderFn<T, typeof context>>(provider, 'get')(ctx);
+const included = (predicate: unknown, ctx: typeof context = context) =>
+  getComponent<PredicateFn<typeof context>>(predicate, 'test')(ctx);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -101,5 +108,50 @@ describe('@sektek/base:app', function () {
   it('composes the config generator', async function () {
     const { fs } = await run();
     expect(fs.exists('gen.config.yaml')).to.be.true;
+  });
+
+  describe('composites()', function () {
+    it('lists every sub-generator composeWith in taskInitializing, in order', function () {
+      expect(AppGenerator.composites().map(({ name }) => name)).to.deep.equal([
+        'editorconfig',
+        'git',
+        'gitconfig',
+        'github',
+        'license',
+        'readme',
+        'devcontainer',
+        'config',
+      ]);
+    });
+  });
+
+  describe('prompts()', function () {
+    it('includes includeGitHub, defaulting to false', async function () {
+      const prompts = AppGenerator.prompts();
+      const includeGitHub = prompts.find(p => p.name === 'includeGitHub')!;
+
+      expect(includeGitHub).to.exist;
+      expect(await provide(includeGitHub.provider)).to.equal(false);
+    });
+
+    it("derives createRepo from includeGitHub's answer, never asking it separately", async function () {
+      const prompts = AppGenerator.prompts();
+      const createRepo = prompts.find(p => p.name === 'createRepo')!;
+
+      expect(createRepo).to.exist;
+      expect(await included(createRepo.includePrompt)).to.equal(false);
+      expect(
+        await provide(createRepo.provider, {
+          answers: { includeGitHub: false },
+          flagsGiven: {},
+        }),
+      ).to.equal(false);
+      expect(
+        await provide(createRepo.provider, {
+          answers: { includeGitHub: true },
+          flagsGiven: {},
+        }),
+      ).to.equal(true);
+    });
   });
 });
