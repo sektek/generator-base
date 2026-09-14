@@ -1,4 +1,4 @@
-import '../git/index.js';
+import { Composite, Prompt, PromptBuilder } from '@sektek/generator';
 
 import { GithubClient, defaultGithubClient } from '../../lib/github/client.js';
 import { ApiOptions } from '../../lib/github/token.js';
@@ -6,10 +6,13 @@ import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
 import { BaseOptions } from '../../lib/types/base-options.js';
+import { GitGenerator } from '../git/index.js';
 
 const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
+
+const COMPOSITES: Composite[] = [{ name: 'git', generatorClass: GitGenerator }];
 
 export type GithubGeneratorOptions = BaseOptions & {
   /**
@@ -24,6 +27,21 @@ export class GithubGenerator extends BaseGenerator<
   GithubGeneratorOptions,
   BaseFeatures
 > {
+  static composites(): Composite[] {
+    return COMPOSITES;
+  }
+
+  static prompts(): Prompt[] {
+    return [
+      new PromptBuilder().create({
+        name: 'createRepo',
+        type: 'boolean',
+        label: 'Create a GitHub repository for this project?',
+        provider: () => false,
+      }),
+    ];
+  }
+
   // Resolved once in taskInitializing (alongside the repo-exists safety
   // check, which needs a token to call the API anyway) and reused in
   // taskEnd, rather than resolving the token a second time there.
@@ -69,7 +87,9 @@ export class GithubGenerator extends BaseGenerator<
       }
     }
 
-    await this.composeWith('git', this.options, true);
+    for (const { name } of GithubGenerator.composites()) {
+      await this.composeWith(name, this.options, true);
+    }
   }
 
   async taskEnd() {
