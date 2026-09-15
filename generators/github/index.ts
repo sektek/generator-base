@@ -1,4 +1,4 @@
-import { Composite, Prompt, PromptBuilder } from '@sektek/generator';
+import { Prompt, PromptBuilder } from '@sektek/generator';
 
 import { GithubClient, defaultGithubClient } from '../../lib/github/client.js';
 import { ApiOptions } from '../../lib/github/token.js';
@@ -6,13 +6,10 @@ import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
 import { BaseOptions } from '../../lib/types/base-options.js';
-import { GitGenerator } from '../git/index.js';
 
 const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
-
-const COMPOSITES: Composite[] = [{ name: 'git', generatorClass: GitGenerator }];
 
 export type GithubGeneratorOptions = BaseOptions & {
   /**
@@ -22,15 +19,17 @@ export type GithubGeneratorOptions = BaseOptions & {
   githubClient?: GithubClient;
 };
 
+// Composited by git (see git/index.ts), not the other way — pushing to a
+// new GitHub repo only ever makes sense once a local repo exists, so git
+// owns that relationship. This generator no longer composes git itself:
+// running it directly (`gen base:github`, outside of git/app) skips git
+// entirely, so taskEnd's push only succeeds against a directory that's
+// already a real git repo.
 export class GithubGenerator extends BaseGenerator<
   BaseConfig,
   GithubGeneratorOptions,
   BaseFeatures
 > {
-  static composites(): Composite[] {
-    return COMPOSITES;
-  }
-
   static prompts(): Prompt[] {
     return [
       new PromptBuilder().create({
@@ -85,10 +84,6 @@ export class GithubGenerator extends BaseGenerator<
             'repo first.',
         );
       }
-    }
-
-    for (const { name } of GithubGenerator.composites()) {
-      await this.composeWith(name, this.options, true);
     }
   }
 

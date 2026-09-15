@@ -7,8 +7,6 @@ import sinon, { SinonStub } from 'sinon';
 import { helper } from '@sektek/generator-test';
 import sinonChai from 'sinon-chai';
 
-import { GitClient } from '../../lib/git/client.js';
-import { GitGenerator } from '../git/index.js';
 import { GithubClient } from '../../lib/github/client.js';
 
 import { GithubGenerator } from './index.js';
@@ -19,18 +17,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const generator = join(__dirname, 'index.js');
 
-// GithubGenerator composes the git generator by the namespace it rewrites
-// unqualified composeWith calls to (see CoreGenerator#composeWith). The
-// shared test helper has nothing registered under that namespace by
-// default, so it must be registered by path (so its templates/ dir, if any,
-// still resolves) under the namespace github will compose it as.
 const run = (options: Record<string, unknown> = {}) =>
-  helper
-    .run(generator)
-    .withGenerators([
-      [join(__dirname, '../git/index.js'), { namespace: '@sektek/base:git' }],
-    ])
-    .withOptions(options);
+  helper.run(generator).withOptions(options);
 
 type FakeGithubClient = GithubClient & {
   resolveToken: SinonStub;
@@ -59,28 +47,10 @@ function fakeGithubClient(): FakeGithubClient {
   };
 }
 
-type FakeGitClient = GitClient & {
-  isRepoInitialized: SinonStub;
-  isDestinationEmpty: SinonStub;
-  initRepo: SinonStub;
-  commitAll: SinonStub;
-};
-
-function fakeGitClient(): FakeGitClient {
-  return {
-    isRepoInitialized: sinon.stub().resolves(false),
-    isDestinationEmpty: sinon.stub().resolves(true),
-    initRepo: sinon.stub().resolves(),
-    commitAll: sinon.stub().resolves(),
-  };
-}
-
 describe('@sektek/base:github', function () {
   it('generates using GithubGenerator', async function () {
     const githubClient = fakeGithubClient();
-    // git's own taskEnd would otherwise try to init a real repo; disable it
-    // since it's irrelevant to what this suite is testing.
-    const result = await run({ gitInit: false, githubClient });
+    const result = await run({ githubClient });
     expect(result.generator).to.be.instanceOf(GithubGenerator);
   });
 
@@ -88,7 +58,7 @@ describe('@sektek/base:github', function () {
     it('does nothing', async function () {
       const githubClient = fakeGithubClient();
 
-      await run({ gitInit: false, githubClient });
+      await run({ githubClient });
 
       expect(githubClient.resolveToken).not.to.have.been.called;
       expect(githubClient.createRepo).not.to.have.been.called;
@@ -100,9 +70,8 @@ describe('@sektek/base:github', function () {
   describe('when createRepo is true', function () {
     it('resolves the token, checks for a collision, creates the repo, adds the remote, and pushes, in order', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
-      await run({ createRepo: true, githubClient, gitClient });
+      await run({ createRepo: true, githubClient });
 
       expect(githubClient.resolveToken).to.have.been.calledOnceWith(undefined);
       expect(githubClient.repoExists).to.have.been.calledOnceWith(
@@ -138,9 +107,8 @@ describe('@sektek/base:github', function () {
 
     it('defaults visibility to private', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
-      await run({ createRepo: true, githubClient, gitClient });
+      await run({ createRepo: true, githubClient });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
         sinon.match.any,
@@ -150,13 +118,11 @@ describe('@sektek/base:github', function () {
 
     it('maps repoVisibility: "public" to private: false', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         repoVisibility: 'public',
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -167,13 +133,11 @@ describe('@sektek/base:github', function () {
 
     it('maps repoVisibility: "private" to private: true', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         repoVisibility: 'private',
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -184,13 +148,11 @@ describe('@sektek/base:github', function () {
 
     it('passes repoOwner through when given', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         repoOwner: 'some-org',
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -201,9 +163,8 @@ describe('@sektek/base:github', function () {
 
     it('leaves owner undefined when repoOwner is omitted', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
-      await run({ createRepo: true, githubClient, gitClient });
+      await run({ createRepo: true, githubClient });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
         sinon.match.any,
@@ -213,12 +174,10 @@ describe('@sektek/base:github', function () {
 
     it('uses projectSlug as the repo name', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       const result = await run({
         createRepo: true,
         githubClient,
-        gitClient,
       });
 
       const instance = result.generator as GithubGenerator;
@@ -262,13 +221,11 @@ describe('@sektek/base:github', function () {
     it('checks against repoOwner when given', async function () {
       const githubClient = fakeGithubClient();
       githubClient.repoExists.resolves({ exists: false, owner: 'some-org' });
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         repoOwner: 'some-org',
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.repoExists).to.have.been.calledOnceWith(
@@ -281,13 +238,11 @@ describe('@sektek/base:github', function () {
   describe('when push is false', function () {
     it('runs every step except push', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         push: false,
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.resolveToken).to.have.been.calledOnce;
@@ -312,10 +267,8 @@ describe('@sektek/base:github', function () {
   });
 
   describe('composites()', function () {
-    it('composes git', function () {
-      expect(GithubGenerator.composites()).to.deep.equal([
-        { name: 'git', generatorClass: GitGenerator },
-      ]);
+    it('composites nothing of its own — git owns composing github, not the reverse', function () {
+      expect(GithubGenerator.composites()).to.deep.equal([]);
     });
   });
 

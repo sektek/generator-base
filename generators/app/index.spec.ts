@@ -1,17 +1,15 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-import { PredicateFn, ProviderFn, getComponent } from '@sektek/utility-belt';
+import { ProviderFn, getComponent } from '@sektek/utility-belt';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
 
 import { AppGenerator } from './index.js';
 
 const context = { answers: {}, flagsGiven: {} };
-const provide = <T>(provider: unknown, ctx: typeof context = context) =>
-  getComponent<ProviderFn<T, typeof context>>(provider, 'get')(ctx);
-const included = (predicate: unknown, ctx: typeof context = context) =>
-  getComponent<PredicateFn<typeof context>>(predicate, 'test')(ctx);
+const provide = <T>(provider: unknown) =>
+  getComponent<ProviderFn<T, typeof context>>(provider, 'get')(context);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -112,11 +110,12 @@ describe('@sektek/base:app', function () {
 
   describe('composites()', function () {
     it('lists every sub-generator composeWith in taskInitializing, in order', function () {
+      // github isn't listed here — it's composited into git instead (see
+      // git/index.spec.ts), not a top-level app concern.
       expect(AppGenerator.composites().map(({ name }) => name)).to.deep.equal([
         'editorconfig',
         'git',
         'gitconfig',
-        'github',
         'license',
         'readme',
         'devcontainer',
@@ -126,32 +125,18 @@ describe('@sektek/base:app', function () {
   });
 
   describe('prompts()', function () {
-    it('includes includeGitHub, defaulting to false', async function () {
+    it("aggregates every composed sub-generator's prompts", async function () {
       const prompts = AppGenerator.prompts();
-      const includeGitHub = prompts.find(p => p.name === 'includeGitHub')!;
+      const names = prompts.map(p => p.name);
 
-      expect(includeGitHub).to.exist;
-      expect(await provide(includeGitHub.provider)).to.equal(false);
-    });
+      // gitInit and createRepo aren't app's own prompts — they surface
+      // here because git composites github (see git/index.spec.ts for
+      // their actual gating behavior).
+      expect(names).to.include('gitInit');
+      expect(names).to.include('createRepo');
 
-    it("derives createRepo from includeGitHub's answer, never asking it separately", async function () {
-      const prompts = AppGenerator.prompts();
-      const createRepo = prompts.find(p => p.name === 'createRepo')!;
-
-      expect(createRepo).to.exist;
-      expect(await included(createRepo.includePrompt)).to.equal(false);
-      expect(
-        await provide(createRepo.provider, {
-          answers: { includeGitHub: false },
-          flagsGiven: {},
-        }),
-      ).to.equal(false);
-      expect(
-        await provide(createRepo.provider, {
-          answers: { includeGitHub: true },
-          flagsGiven: {},
-        }),
-      ).to.equal(true);
+      const gitInit = prompts.find(p => p.name === 'gitInit')!;
+      expect(await provide(gitInit.provider)).to.equal(true);
     });
   });
 });

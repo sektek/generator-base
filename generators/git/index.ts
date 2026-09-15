@@ -1,8 +1,11 @@
+import { Composite, Prompt, PromptBuilder } from '@sektek/generator';
+
 import { GitClient, defaultGitClient } from '../../lib/git/client.js';
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
 import { BaseOptions } from '../../lib/types/base-options.js';
+import { GithubGenerator } from '../github/index.js';
 
 const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
@@ -16,11 +19,45 @@ export type GitGeneratorOptions = BaseOptions & {
   gitClient?: GitClient;
 };
 
+// github no longer composites git back (see github/index.ts) — creating a
+// GitHub repo only ever makes sense once git itself is being initialized,
+// so git is the sole owner of this relationship, not a mutual one.
+const COMPOSITES = [
+  { name: 'github', generatorClass: GithubGenerator },
+] satisfies Composite[];
+
 export class GitGenerator extends BaseGenerator<
   BaseConfig,
   GitGeneratorOptions,
   BaseFeatures
 > {
+  static composites(): Composite[] {
+    return COMPOSITES;
+  }
+
+  static prompts(): Prompt[] {
+    const gitInitPrompt = new PromptBuilder().create({
+      name: 'gitInit',
+      type: 'boolean',
+      label: 'Initialize a git repository?',
+      provider: () => true,
+    });
+
+    return [
+      gitInitPrompt,
+      // github's createRepo asks a genuinely different question ("also
+      // push to a new GitHub repo?"), so it's shown, not derived — just
+      // gated on gitInit, since there's no local repo to push without one.
+      ...COMPOSITES.flatMap(({ generatorClass }) =>
+        generatorClass.prompts().map(prompt =>
+          new PromptBuilder().from(prompt).create({
+            includePrompt: context => context.answers.gitInit !== false,
+          }),
+        ),
+      ),
+    ];
+  }
+
   // Decided once in taskInitializing, before Yeoman's writing phase adds
   // any files — by taskEnd the destination is never empty regardless of
   // what was there when this run started, so "was it empty" can only be
@@ -41,6 +78,10 @@ export class GitGenerator extends BaseGenerator<
   async taskInitializing() {
     const { options } = this;
     if (options.gitInit === false) return;
+
+    for (const { name } of GitGenerator.composites()) {
+      await this.composeWith(name, options, true);
+    }
 
     const client = options.gitClient ?? defaultGitClient();
     const cwd = this.destinationRoot();

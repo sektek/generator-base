@@ -1,4 +1,4 @@
-import { Composite, Prompt, PromptBuilder } from '@sektek/generator';
+import { Composite, Prompt } from '@sektek/generator';
 
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
@@ -9,7 +9,6 @@ import { DevcontainerGenerator } from '../devcontainer/index.js';
 import { EditorConfigGenerator } from '../editorconfig/index.js';
 import { GitConfigGenerator } from '../gitconfig/index.js';
 import { GitGenerator } from '../git/index.js';
-import { GithubGenerator } from '../github/index.js';
 import { LicenseGenerator } from '../license/index.js';
 import { ReadmeGenerator } from '../readme/index.js';
 
@@ -22,26 +21,19 @@ const DEFAULT_FEATURES: Partial<BaseFeatures> = {
 // prompts()/composites() every CoreGenerator subclass inherits) instead of
 // widening to Composite's own generatorClass field type, which — same as
 // Constructor<T> generally — carries no static members.
+//
+// github isn't listed here: it's composited into git instead (see
+// git/index.ts), since creating a GitHub repo is really a sub-decision of
+// setting up git in the first place, not an independent top-level concern.
 const COMPOSITES = [
   { name: 'editorconfig', generatorClass: EditorConfigGenerator },
   { name: 'git', generatorClass: GitGenerator },
   { name: 'gitconfig', generatorClass: GitConfigGenerator },
-  { name: 'github', generatorClass: GithubGenerator },
   { name: 'license', generatorClass: LicenseGenerator },
   { name: 'readme', generatorClass: ReadmeGenerator },
   { name: 'devcontainer', generatorClass: DevcontainerGenerator },
   { name: 'config', generatorClass: ConfigGenerator },
 ] satisfies Composite[];
-
-// github's own createRepo prompt only makes sense once the user has opted
-// into a GitHub repo at all — app owns that decision (includeGitHub) since
-// it applies regardless of whether github ends up composed standalone.
-const includeGitHubPrompt = new PromptBuilder().create({
-  name: 'includeGitHub',
-  type: 'boolean',
-  label: 'Create a GitHub repository for this project?',
-  provider: () => false,
-});
 
 export class AppGenerator extends BaseGenerator<
   BaseConfig,
@@ -53,23 +45,7 @@ export class AppGenerator extends BaseGenerator<
   }
 
   static prompts(): Prompt[] {
-    return [
-      includeGitHubPrompt,
-      // github's own createRepo asks the same yes/no question
-      // includeGitHub already did, so it's never itself shown here — its
-      // value is derived from includeGitHub's answer instead of asked a
-      // second time.
-      ...COMPOSITES.flatMap(({ name, generatorClass }) =>
-        name === 'github'
-          ? generatorClass.prompts().map(prompt =>
-              new PromptBuilder().from(prompt).create({
-                includePrompt: () => false,
-                provider: context => context.answers.includeGitHub === true,
-              }),
-            )
-          : generatorClass.prompts(),
-      ),
-    ];
+    return COMPOSITES.flatMap(({ generatorClass }) => generatorClass.prompts());
   }
 
   constructor(
