@@ -1,4 +1,4 @@
-import '../git/index.js';
+import { Prompt, PromptBuilder } from '@sektek/generator';
 
 import { GithubClient, defaultGithubClient } from '../../lib/github/client.js';
 import { ApiOptions } from '../../lib/github/token.js';
@@ -19,11 +19,28 @@ export type GithubGeneratorOptions = BaseOptions & {
   githubClient?: GithubClient;
 };
 
+// Composited by git (see git/index.ts), not the other way — pushing to a
+// new GitHub repo only ever makes sense once a local repo exists, so git
+// owns that relationship. This generator no longer composes git itself:
+// running it directly (`gen base:github`, outside of git/app) skips git
+// entirely, so taskEnd's push only succeeds against a directory that's
+// already a real git repo.
 export class GithubGenerator extends BaseGenerator<
   BaseConfig,
   GithubGeneratorOptions,
   BaseFeatures
 > {
+  static prompts(): Prompt[] {
+    return [
+      new PromptBuilder().create({
+        name: 'createRepo',
+        type: 'boolean',
+        label: 'Create a GitHub repository for this project?',
+        provider: () => false,
+      }),
+    ];
+  }
+
   // Resolved once in taskInitializing (alongside the repo-exists safety
   // check, which needs a token to call the API anyway) and reused in
   // taskEnd, rather than resolving the token a second time there.
@@ -68,8 +85,6 @@ export class GithubGenerator extends BaseGenerator<
         );
       }
     }
-
-    await this.composeWith('git', this.options, true);
   }
 
   async taskEnd() {

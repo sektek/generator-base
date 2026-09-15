@@ -1,26 +1,53 @@
-import '../config/index.js';
-import '../devcontainer/index.js';
-import '../editorconfig/index.js';
-import '../git/index.js';
-import '../gitconfig/index.js';
-import '../github/index.js';
-import '../license/index.js';
-import '../readme/index.js';
+import { Composite, Prompt } from '@sektek/generator';
 
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
 import { BaseOptions } from '../../lib/types/base-options.js';
+import { ConfigGenerator } from '../config/index.js';
+import { DevcontainerGenerator } from '../devcontainer/index.js';
+import { EditorConfigGenerator } from '../editorconfig/index.js';
+import { GitConfigGenerator } from '../gitconfig/index.js';
+import { GitGenerator } from '../git/index.js';
+import { LicenseGenerator } from '../license/index.js';
+import { ReadmeGenerator } from '../readme/index.js';
 
 const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
+
+// satisfies, not a `: Composite[]` annotation, so each entry's
+// generatorClass keeps its specific type (and with it, the static
+// prompts()/composites() every CoreGenerator subclass inherits) instead of
+// widening to Composite's own generatorClass field type, which — same as
+// Constructor<T> generally — carries no static members.
+//
+// github isn't listed here: it's composited into git instead (see
+// git/index.ts), since creating a GitHub repo is really a sub-decision of
+// setting up git in the first place, not an independent top-level concern.
+const COMPOSITES = [
+  { name: 'editorconfig', generatorClass: EditorConfigGenerator },
+  { name: 'git', generatorClass: GitGenerator },
+  { name: 'gitconfig', generatorClass: GitConfigGenerator },
+  { name: 'license', generatorClass: LicenseGenerator },
+  { name: 'readme', generatorClass: ReadmeGenerator },
+  { name: 'devcontainer', generatorClass: DevcontainerGenerator },
+  { name: 'config', generatorClass: ConfigGenerator },
+] satisfies Composite[];
 
 export class AppGenerator extends BaseGenerator<
   BaseConfig,
   BaseOptions,
   BaseFeatures
 > {
+  static composites(): Composite[] {
+    return COMPOSITES;
+  }
+
+  static prompts(): Prompt[] {
+    return COMPOSITES.flatMap(({ generatorClass }) => generatorClass.prompts());
+  }
+
   constructor(
     args: string[],
     options: BaseOptions,
@@ -42,14 +69,9 @@ export class AppGenerator extends BaseGenerator<
     // this.options is the actual, correct source, matching every other
     // generator in this codebase.
     const { options } = this;
-    await this.composeWith('editorconfig', options, true);
-    await this.composeWith('git', options, true);
-    await this.composeWith('gitconfig', options, true);
-    await this.composeWith('github', options, true);
-    await this.composeWith('license', options, true);
-    await this.composeWith('readme', options, true);
-    await this.composeWith('devcontainer', options, true);
-    await this.composeWith('config', options, true);
+    for (const { name } of AppGenerator.composites()) {
+      await this.composeWith(name, options, true);
+    }
   }
 }
 

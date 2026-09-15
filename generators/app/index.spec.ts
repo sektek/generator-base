@@ -1,10 +1,15 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
+import { ProviderFn, getComponent } from '@sektek/utility-belt';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
 
 import { AppGenerator } from './index.js';
+
+const context = { answers: {}, flagsGiven: {} };
+const provide = <T>(provider: unknown) =>
+  getComponent<ProviderFn<T, typeof context>>(provider, 'get')(context);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -101,5 +106,37 @@ describe('@sektek/base:app', function () {
   it('composes the config generator', async function () {
     const { fs } = await run();
     expect(fs.exists('gen.config.yaml')).to.be.true;
+  });
+
+  describe('composites()', function () {
+    it('lists every sub-generator composeWith in taskInitializing, in order', function () {
+      // github isn't listed here — it's composited into git instead (see
+      // git/index.spec.ts), not a top-level app concern.
+      expect(AppGenerator.composites().map(({ name }) => name)).to.deep.equal([
+        'editorconfig',
+        'git',
+        'gitconfig',
+        'license',
+        'readme',
+        'devcontainer',
+        'config',
+      ]);
+    });
+  });
+
+  describe('prompts()', function () {
+    it("aggregates every composed sub-generator's prompts", async function () {
+      const prompts = AppGenerator.prompts();
+      const names = prompts.map(p => p.name);
+
+      // gitInit and createRepo aren't app's own prompts — they surface
+      // here because git composites github (see git/index.spec.ts for
+      // their actual gating behavior).
+      expect(names).to.include('gitInit');
+      expect(names).to.include('createRepo');
+
+      const gitInit = prompts.find(p => p.name === 'gitInit')!;
+      expect(await provide(gitInit.provider)).to.equal(true);
+    });
   });
 });
