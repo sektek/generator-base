@@ -52,6 +52,22 @@ export async function resolveToken(explicit?: string): Promise<string> {
 }
 
 /**
+ * A `githubToken` prompt's provider: the same chain as `resolveToken`
+ * (minus the `explicit` argument, meaningless for a prompt's own default),
+ * but resolving to `undefined` instead of throwing when nothing's found,
+ * so the user can just type one in.
+ *
+ * @returns The resolved token, or `undefined`.
+ */
+export async function deriveGithubToken(): Promise<string | undefined> {
+  try {
+    return await resolveToken();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Reads a token from `gh auth token`, returning `undefined` if `gh` isn't
  * installed, the user isn't logged in, or it printed nothing.
  *

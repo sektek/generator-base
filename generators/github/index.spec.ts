@@ -1,6 +1,8 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
+import { PredicateFn, ProviderFn, getComponent } from '@sektek/utility-belt';
+import { PromptContext, clearable } from '@sektek/generator';
 import { expect, use } from 'chai';
 import sinon, { SinonStub } from 'sinon';
 import { helper } from '@sektek/generator-test';
@@ -8,6 +10,7 @@ import sinonChai from 'sinon-chai';
 
 import { GitClient } from '../../lib/git/client.js';
 import { GithubClient } from '../../lib/github/client.js';
+import { deriveGithubToken } from '../../lib/github/token.js';
 
 import { GithubGenerator } from './index.js';
 
@@ -17,18 +20,29 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const generator = join(__dirname, 'index.js');
 
-// GithubGenerator composes the git generator by the namespace it rewrites
-// unqualified composeWith calls to (see CoreGenerator#composeWith). The
-// shared test helper has nothing registered under that namespace by
-// default, so it must be registered by path (so its templates/ dir, if any,
-// still resolves) under the namespace github will compose it as.
-const run = (options: Record<string, unknown> = {}) =>
-  helper
-    .run(generator)
+// GithubGenerator composites git (see index.ts) for standalone use, and
+// git in turn composites github right back — so this run needs a real,
+// resolvable namespace of its own (via `settings.namespace`), matching the
+// one git's nested composeWith('github', ...) resolves to, or Yeoman's
+// unique:true dedup can't recognize that return trip as this same
+// top-level instance and runs github twice.
+//
+// gitClient defaults to a fake here, same reason app/index.spec.ts
+// defaults gitInit: false — these tests are about github's own behavior,
+// not git's real init/commit against the test's on-disk temp fixture.
+const run = (options: Record<string, unknown> = {}) => {
+  const withGitClient: Record<string, unknown> = {
+    gitClient: fakeGitClient(),
+    ...options,
+  };
+  return helper
+    .run(generator, { namespace: '@sektek/base:github' })
+    .withOptions(withGitClient)
     .withGenerators([
       [join(__dirname, '../git/index.js'), { namespace: '@sektek/base:git' }],
-    ])
-    .withOptions(options);
+      [join(__dirname, 'index.js'), { namespace: '@sektek/base:github' }],
+    ]);
+};
 
 type FakeGithubClient = GithubClient & {
   resolveToken: SinonStub;
@@ -76,9 +90,7 @@ function fakeGitClient(): FakeGitClient {
 describe('@sektek/base:github', function () {
   it('generates using GithubGenerator', async function () {
     const githubClient = fakeGithubClient();
-    // git's own taskEnd would otherwise try to init a real repo; disable it
-    // since it's irrelevant to what this suite is testing.
-    const result = await run({ gitInit: false, githubClient });
+    const result = await run({ githubClient });
     expect(result.generator).to.be.instanceOf(GithubGenerator);
   });
 
@@ -86,7 +98,7 @@ describe('@sektek/base:github', function () {
     it('does nothing', async function () {
       const githubClient = fakeGithubClient();
 
-      await run({ gitInit: false, githubClient });
+      await run({ githubClient });
 
       expect(githubClient.resolveToken).not.to.have.been.called;
       expect(githubClient.createRepo).not.to.have.been.called;
@@ -98,9 +110,8 @@ describe('@sektek/base:github', function () {
   describe('when createRepo is true', function () {
     it('resolves the token, checks for a collision, creates the repo, adds the remote, and pushes, in order', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
-      await run({ createRepo: true, githubClient, gitClient });
+      await run({ createRepo: true, githubClient });
 
       expect(githubClient.resolveToken).to.have.been.calledOnceWith(undefined);
       expect(githubClient.repoExists).to.have.been.calledOnceWith(
@@ -136,9 +147,8 @@ describe('@sektek/base:github', function () {
 
     it('defaults visibility to private', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
-      await run({ createRepo: true, githubClient, gitClient });
+      await run({ createRepo: true, githubClient });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
         sinon.match.any,
@@ -148,13 +158,11 @@ describe('@sektek/base:github', function () {
 
     it('maps repoVisibility: "public" to private: false', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         repoVisibility: 'public',
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -165,13 +173,11 @@ describe('@sektek/base:github', function () {
 
     it('maps repoVisibility: "private" to private: true', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         repoVisibility: 'private',
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -182,13 +188,11 @@ describe('@sektek/base:github', function () {
 
     it('passes repoOwner through when given', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         repoOwner: 'some-org',
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
@@ -199,9 +203,8 @@ describe('@sektek/base:github', function () {
 
     it('leaves owner undefined when repoOwner is omitted', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
-      await run({ createRepo: true, githubClient, gitClient });
+      await run({ createRepo: true, githubClient });
 
       expect(githubClient.createRepo).to.have.been.calledWith(
         sinon.match.any,
@@ -211,12 +214,10 @@ describe('@sektek/base:github', function () {
 
     it('uses projectSlug as the repo name', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       const result = await run({
         createRepo: true,
         githubClient,
-        gitClient,
       });
 
       const instance = result.generator as GithubGenerator;
@@ -260,13 +261,11 @@ describe('@sektek/base:github', function () {
     it('checks against repoOwner when given', async function () {
       const githubClient = fakeGithubClient();
       githubClient.repoExists.resolves({ exists: false, owner: 'some-org' });
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         repoOwner: 'some-org',
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.repoExists).to.have.been.calledOnceWith(
@@ -279,13 +278,11 @@ describe('@sektek/base:github', function () {
   describe('when push is false', function () {
     it('runs every step except push', async function () {
       const githubClient = fakeGithubClient();
-      const gitClient = fakeGitClient();
 
       await run({
         createRepo: true,
         push: false,
         githubClient,
-        gitClient,
       });
 
       expect(githubClient.resolveToken).to.have.been.calledOnce;
@@ -306,6 +303,73 @@ describe('@sektek/base:github', function () {
       expect(githubClient.createRepo).not.to.have.been.called;
       expect(githubClient.addRemote).not.to.have.been.called;
       expect(githubClient.push).not.to.have.been.called;
+    });
+  });
+
+  describe('prompts()', function () {
+    const provide = <T>(provider: unknown, context: PromptContext) => {
+      const get: ProviderFn<T, PromptContext> = getComponent(provider, 'get');
+      return get(context);
+    };
+    const included = (includePrompt: unknown, context: PromptContext) => {
+      const test: PredicateFn<PromptContext> = getComponent(
+        includePrompt,
+        'test',
+      );
+      return test(context);
+    };
+
+    it('exposes createRepo, defaulting to false', async function () {
+      const prompts = GithubGenerator.prompts();
+      const createRepo = prompts.find(p => p.name === 'createRepo')!;
+
+      expect(createRepo).to.exist;
+      const context = { answers: {}, flagsGiven: {} };
+      expect(await provide(createRepo.provider, context)).to.equal(false);
+    });
+
+    it('exposes repoOwner, shown only when createRepo is true, defaulting to the personal account (undefined)', async function () {
+      const prompts = GithubGenerator.prompts();
+      const repoOwner = prompts.find(p => p.name === 'repoOwner')!;
+
+      expect(repoOwner).to.exist;
+      expect(
+        await provide(repoOwner.provider, { answers: {}, flagsGiven: {} }),
+      ).to.equal(undefined);
+      expect(
+        await included(repoOwner.includePrompt, {
+          answers: { createRepo: false },
+          flagsGiven: {},
+        }),
+      ).to.equal(false);
+      expect(
+        await included(repoOwner.includePrompt, {
+          answers: { createRepo: true },
+          flagsGiven: {},
+        }),
+      ).to.equal(true);
+      expect(repoOwner.capabilities).to.deep.equal([clearable]);
+    });
+
+    it('exposes githubToken, shown only when createRepo is true, deriving its default the same way resolveToken does', async function () {
+      const prompts = GithubGenerator.prompts();
+      const githubToken = prompts.find(p => p.name === 'githubToken')!;
+
+      expect(githubToken).to.exist;
+      expect(githubToken.provider).to.equal(deriveGithubToken);
+      expect(
+        await included(githubToken.includePrompt, {
+          answers: { createRepo: false },
+          flagsGiven: {},
+        }),
+      ).to.equal(false);
+      expect(
+        await included(githubToken.includePrompt, {
+          answers: { createRepo: true },
+          flagsGiven: {},
+        }),
+      ).to.equal(true);
+      expect(githubToken.capabilities).to.deep.equal([clearable]);
     });
   });
 });
