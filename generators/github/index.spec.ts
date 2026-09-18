@@ -30,14 +30,19 @@ const generator = join(__dirname, 'index.js');
 // gitClient defaults to a fake here, same reason app/index.spec.ts
 // defaults gitInit: false — these tests are about github's own behavior,
 // not git's real init/commit against the test's on-disk temp fixture.
-const run = (options: Record<string, unknown> = {}) =>
-  helper
+const run = (options: Record<string, unknown> = {}) => {
+  const withGitClient: Record<string, unknown> = {
+    gitClient: fakeGitClient(),
+    ...options,
+  };
+  return helper
     .run(generator, { namespace: '@sektek/base:github' })
-    .withOptions({ gitClient: fakeGitClient(), ...options })
+    .withOptions(withGitClient)
     .withGenerators([
       [join(__dirname, '../git/index.js'), { namespace: '@sektek/base:git' }],
       [join(__dirname, 'index.js'), { namespace: '@sektek/base:github' }],
     ]);
+};
 
 type FakeGithubClient = GithubClient & {
   resolveToken: SinonStub;
@@ -302,10 +307,17 @@ describe('@sektek/base:github', function () {
   });
 
   describe('prompts()', function () {
-    const provide = <T>(provider: unknown, context: PromptContext) =>
-      getComponent<ProviderFn<T, PromptContext>>(provider, 'get')(context);
-    const included = (includePrompt: unknown, context: PromptContext) =>
-      getComponent<PredicateFn<PromptContext>>(includePrompt, 'test')(context);
+    const provide = <T>(provider: unknown, context: PromptContext) => {
+      const get: ProviderFn<T, PromptContext> = getComponent(provider, 'get');
+      return get(context);
+    };
+    const included = (includePrompt: unknown, context: PromptContext) => {
+      const test: PredicateFn<PromptContext> = getComponent(
+        includePrompt,
+        'test',
+      );
+      return test(context);
+    };
 
     it('exposes createRepo, defaulting to false', async function () {
       const prompts = GithubGenerator.prompts();

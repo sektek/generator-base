@@ -22,7 +22,13 @@ const promptContext = { answers: {}, flagsGiven: {} };
 const provide = <T>(
   provider: unknown,
   ctx: typeof promptContext = promptContext,
-) => getComponent<ProviderFn<T, typeof promptContext>>(provider, 'get')(ctx);
+) => {
+  const get: ProviderFn<T, typeof promptContext> = getComponent(
+    provider,
+    'get',
+  );
+  return get(ctx);
+};
 
 type FakeGitClient = GitClient & {
   isRepoInitialized: SinonStub;
@@ -143,11 +149,11 @@ describe('@sektek/base:git', function () {
 
       expect(createRepo).to.exist;
 
-      const included = (ctx: typeof promptContext) =>
-        getComponent<(ctx: typeof promptContext) => boolean | Promise<boolean>>(
-          createRepo.includePrompt,
-          'test',
-        )(ctx);
+      const included = (ctx: typeof promptContext) => {
+        const test: (ctx: typeof promptContext) => boolean | Promise<boolean> =
+          getComponent(createRepo.includePrompt, 'test');
+        return test(ctx);
+      };
 
       expect(
         await included({ answers: { gitInit: true }, flagsGiven: {} }),

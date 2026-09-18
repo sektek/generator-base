@@ -8,8 +8,10 @@ import { helper } from '@sektek/generator-test';
 import { AppGenerator } from './index.js';
 
 const context = { answers: {}, flagsGiven: {} };
-const provide = <T>(provider: unknown) =>
-  getComponent<ProviderFn<T, typeof context>>(provider, 'get')(context);
+const provide = <T>(provider: unknown) => {
+  const get: ProviderFn<T, typeof context> = getComponent(provider, 'get');
+  return get(context);
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,10 +30,14 @@ const generator = join(__dirname, 'index.js');
 // depends on the running machine having a git identity configured — CI
 // runners don't by default, so this was failing in CI with "Please tell me
 // who you are" even though it could pass on a contributor's own machine.
-const run = (options: Record<string, unknown> = {}) =>
-  helper
+const run = (options: Record<string, unknown> = {}) => {
+  const withGitInitFalse: Record<string, unknown> = {
+    gitInit: false,
+    ...options,
+  };
+  return helper
     .run(generator)
-    .withOptions({ gitInit: false, ...options })
+    .withOptions(withGitInitFalse)
     .withGenerators([
       [
         join(__dirname, '../config/index.js'),
@@ -63,6 +69,7 @@ const run = (options: Record<string, unknown> = {}) =>
         { namespace: '@sektek/base:devcontainer' },
       ],
     ]);
+};
 
 describe('@sektek/base:app', function () {
   it('generates using AppGenerator', async function () {
