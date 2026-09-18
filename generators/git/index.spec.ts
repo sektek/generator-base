@@ -43,15 +43,18 @@ function fakeGitClient(
   };
 }
 
-// GitGenerator composites github (see index.ts). The shared test helper
-// has nothing registered under that namespace by default, so it must be
-// registered by path (so its templates/ dir, if any, still resolves)
-// under the namespace git will compose it as.
+// GitGenerator composites github (see index.ts), and github composites
+// git right back for its own standalone use — so this run needs a real,
+// resolvable namespace of its own (via `settings.namespace`, not just an
+// options field), matching the one github's nested composeWith('git', ...)
+// resolves to. Without it, Yeoman's unique:true dedup can't recognize that
+// return trip as this same top-level instance, and runs git twice.
 const run = (options: Record<string, unknown> = {}) =>
   helper
-    .run(generator)
+    .run(generator, { namespace: '@sektek/base:git' })
     .withOptions(options)
     .withGenerators([
+      [join(__dirname, 'index.js'), { namespace: '@sektek/base:git' }],
       [
         join(__dirname, '../github/index.js'),
         { namespace: '@sektek/base:github' },

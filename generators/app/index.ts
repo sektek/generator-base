@@ -16,15 +16,6 @@ const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
 
-// satisfies, not a `: Composite[]` annotation, so each entry's
-// generatorClass keeps its specific type (and with it, the static
-// prompts()/composites() every CoreGenerator subclass inherits) instead of
-// widening to Composite's own generatorClass field type, which — same as
-// Constructor<T> generally — carries no static members.
-//
-// github isn't listed here: it's composited into git instead (see
-// git/index.ts), since creating a GitHub repo is really a sub-decision of
-// setting up git in the first place, not an independent top-level concern.
 const COMPOSITES = [
   { name: 'editorconfig', generatorClass: EditorConfigGenerator },
   { name: 'git', generatorClass: GitGenerator },

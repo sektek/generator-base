@@ -7,6 +7,8 @@ import sinon, { SinonStub } from 'sinon';
 import { helper } from '@sektek/generator-test';
 import sinonChai from 'sinon-chai';
 
+import { GitClient } from '../../lib/git/client.js';
+import { GitGenerator } from '../git/index.js';
 import { GithubClient } from '../../lib/github/client.js';
 
 import { GithubGenerator } from './index.js';
@@ -17,8 +19,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const generator = join(__dirname, 'index.js');
 
+// GithubGenerator composites git (see index.ts) for standalone use, and
+// git in turn composites github right back — so this run needs a real,
+// resolvable namespace of its own (via `settings.namespace`), matching the
+// one git's nested composeWith('github', ...) resolves to, or Yeoman's
+// unique:true dedup can't recognize that return trip as this same
+// top-level instance and runs github twice.
+//
+// gitClient defaults to a fake here, same reason app/index.spec.ts
+// defaults gitInit: false — these tests are about github's own behavior,
+// not git's real init/commit against the test's on-disk temp fixture.
 const run = (options: Record<string, unknown> = {}) =>
-  helper.run(generator).withOptions(options);
+  helper
+    .run(generator, { namespace: '@sektek/base:github' })
+    .withOptions({ gitClient: fakeGitClient(), ...options })
+    .withGenerators([
+      [join(__dirname, '../git/index.js'), { namespace: '@sektek/base:git' }],
+      [join(__dirname, 'index.js'), { namespace: '@sektek/base:github' }],
+    ]);
 
 type FakeGithubClient = GithubClient & {
   resolveToken: SinonStub;
@@ -44,6 +62,22 @@ function fakeGithubClient(): FakeGithubClient {
     }),
     addRemote: sinon.stub().resolves(),
     push: sinon.stub().resolves(),
+  };
+}
+
+type FakeGitClient = GitClient & {
+  isRepoInitialized: SinonStub;
+  isDestinationEmpty: SinonStub;
+  initRepo: SinonStub;
+  commitAll: SinonStub;
+};
+
+function fakeGitClient(): FakeGitClient {
+  return {
+    isRepoInitialized: sinon.stub().resolves(false),
+    isDestinationEmpty: sinon.stub().resolves(true),
+    initRepo: sinon.stub().resolves(),
+    commitAll: sinon.stub().resolves(),
   };
 }
 
@@ -267,8 +301,10 @@ describe('@sektek/base:github', function () {
   });
 
   describe('composites()', function () {
-    it('composites nothing of its own — git owns composing github, not the reverse', function () {
-      expect(GithubGenerator.composites()).to.deep.equal([]);
+    it('composes git', function () {
+      expect(GithubGenerator.composites()).to.deep.equal([
+        { name: 'git', generatorClass: GitGenerator },
+      ]);
     });
   });
 

@@ -19,12 +19,12 @@ export type GitGeneratorOptions = BaseOptions & {
   gitClient?: GitClient;
 };
 
-// github no longer composites git back (see github/index.ts) — creating a
-// GitHub repo only ever makes sense once git itself is being initialized,
-// so git is the sole owner of this relationship, not a mutual one.
-const COMPOSITES = [
-  { name: 'github', generatorClass: GithubGenerator },
-] satisfies Composite[];
+// A function, not a module-level constant: git/index.ts and github/index.ts
+// import each other's class, and referencing GithubGenerator in a
+// top-level const here would evaluate mid-cycle, before github/index.ts's
+// own class declaration has run.
+const composites = () =>
+  [{ name: 'github', generatorClass: GithubGenerator }] satisfies Composite[];
 
 export class GitGenerator extends BaseGenerator<
   BaseConfig,
@@ -32,7 +32,7 @@ export class GitGenerator extends BaseGenerator<
   BaseFeatures
 > {
   static composites(): Composite[] {
-    return COMPOSITES;
+    return composites();
   }
 
   static prompts(): Prompt[] {
@@ -45,10 +45,7 @@ export class GitGenerator extends BaseGenerator<
 
     return [
       gitInitPrompt,
-      // github's createRepo asks a genuinely different question ("also
-      // push to a new GitHub repo?"), so it's shown, not derived — just
-      // gated on gitInit, since there's no local repo to push without one.
-      ...COMPOSITES.flatMap(({ generatorClass }) =>
+      ...composites().flatMap(({ generatorClass }) =>
         generatorClass.prompts().map(prompt =>
           new PromptBuilder().from(prompt).create({
             includePrompt: context => context.answers.gitInit !== false,
