@@ -1,14 +1,16 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-import { ProviderFn, getComponent } from '@sektek/utility-belt';
+import { PredicateFn, ProviderFn, getComponent } from '@sektek/utility-belt';
 import { expect, use } from 'chai';
 import sinon, { SinonStub } from 'sinon';
+import { PromptContext } from '@sektek/generator';
 import { helper } from '@sektek/generator-test';
 import sinonChai from 'sinon-chai';
 
 import { GitClient } from '../../lib/git/client.js';
 import { GithubClient } from '../../lib/github/client.js';
+import { deriveGithubToken } from '../../lib/github/token.js';
 
 import { GithubGenerator } from './index.js';
 
@@ -300,16 +302,60 @@ describe('@sektek/base:github', function () {
   });
 
   describe('prompts()', function () {
-    it('exposes createRepo, defaulting to false', async function () {
-      const [prompt] = GithubGenerator.prompts();
+    const provide = <T>(provider: unknown, context: PromptContext) =>
+      getComponent<ProviderFn<T, PromptContext>>(provider, 'get')(context);
+    const included = (includePrompt: unknown, context: PromptContext) =>
+      getComponent<PredicateFn<PromptContext>>(includePrompt, 'test')(context);
 
-      expect(prompt.name).to.equal('createRepo');
+    it('exposes createRepo, defaulting to false', async function () {
+      const prompts = GithubGenerator.prompts();
+      const createRepo = prompts.find(p => p.name === 'createRepo')!;
+
+      expect(createRepo).to.exist;
       const context = { answers: {}, flagsGiven: {} };
-      const get = getComponent<ProviderFn<unknown, typeof context>>(
-        prompt.provider,
-        'get',
-      );
-      expect(await get(context)).to.equal(false);
+      expect(await provide(createRepo.provider, context)).to.equal(false);
+    });
+
+    it('exposes repoOwner, shown only when createRepo is true, defaulting to the personal account (undefined)', async function () {
+      const prompts = GithubGenerator.prompts();
+      const repoOwner = prompts.find(p => p.name === 'repoOwner')!;
+
+      expect(repoOwner).to.exist;
+      expect(
+        await provide(repoOwner.provider, { answers: {}, flagsGiven: {} }),
+      ).to.equal(undefined);
+      expect(
+        await included(repoOwner.includePrompt, {
+          answers: { createRepo: false },
+          flagsGiven: {},
+        }),
+      ).to.equal(false);
+      expect(
+        await included(repoOwner.includePrompt, {
+          answers: { createRepo: true },
+          flagsGiven: {},
+        }),
+      ).to.equal(true);
+    });
+
+    it('exposes githubToken, shown only when createRepo is true, deriving its default the same way resolveToken does', async function () {
+      const prompts = GithubGenerator.prompts();
+      const githubToken = prompts.find(p => p.name === 'githubToken')!;
+
+      expect(githubToken).to.exist;
+      expect(githubToken.provider).to.equal(deriveGithubToken);
+      expect(
+        await included(githubToken.includePrompt, {
+          answers: { createRepo: false },
+          flagsGiven: {},
+        }),
+      ).to.equal(false);
+      expect(
+        await included(githubToken.includePrompt, {
+          answers: { createRepo: true },
+          flagsGiven: {},
+        }),
+      ).to.equal(true);
     });
   });
 });

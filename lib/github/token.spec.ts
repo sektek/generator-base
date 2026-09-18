@@ -4,7 +4,7 @@ import { expect, use } from 'chai';
 import sinon, { SinonSandbox } from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
 
-import { resolveToken } from './token.js';
+import { deriveGithubToken, resolveToken } from './token.js';
 
 use(chaiAsPromised);
 
@@ -76,6 +76,25 @@ describe('lib/github/token', function () {
       await expect(resolveToken()).to.be.rejectedWith(
         /Unable to resolve a GitHub token/,
       );
+    });
+  });
+
+  describe('deriveGithubToken', function () {
+    it('resolves the same as resolveToken when something resolves', async function () {
+      process.env.GITHUB_TOKEN = 'from-github-token';
+
+      const token = await deriveGithubToken();
+
+      expect(token).to.equal('from-github-token');
+    });
+
+    it('resolves to undefined instead of throwing when nothing resolves', async function () {
+      sandbox
+        .stub(childProcess, 'execFile')
+        // @ts-expect-error - sinon's fake doesn't match execFile's overloads
+        .callsArgWith(2, new Error('not installed'));
+
+      await expect(deriveGithubToken()).to.eventually.equal(undefined);
     });
   });
 });
