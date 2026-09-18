@@ -1,4 +1,9 @@
-import { Prompt, PromptBuilder, PromptContext } from '@sektek/generator';
+import {
+  Prompt,
+  PromptBuilder,
+  PromptContext,
+  clearable,
+} from '@sektek/generator';
 
 import { ApiOptions, deriveGithubToken } from '../../lib/github/token.js';
 import { GithubClient, defaultGithubClient } from '../../lib/github/client.js';
@@ -41,6 +46,7 @@ export class GithubGenerator extends BaseGenerator<
         label: 'GitHub owner (leave blank for your personal account)',
         provider: () => undefined,
         includePrompt: includeIfCreatingRepo,
+        capabilities: [clearable],
       }),
       new PromptBuilder().create({
         name: 'githubToken',
@@ -48,6 +54,7 @@ export class GithubGenerator extends BaseGenerator<
         label: 'GitHub token (leave blank to use `gh auth token`)',
         provider: deriveGithubToken,
         includePrompt: includeIfCreatingRepo,
+        capabilities: [clearable],
       }),
     ];
   }

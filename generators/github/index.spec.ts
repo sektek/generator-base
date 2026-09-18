@@ -2,9 +2,9 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 import { PredicateFn, ProviderFn, getComponent } from '@sektek/utility-belt';
+import { PromptContext, clearable } from '@sektek/generator';
 import { expect, use } from 'chai';
 import sinon, { SinonStub } from 'sinon';
-import { PromptContext } from '@sektek/generator';
 import { helper } from '@sektek/generator-test';
 import sinonChai from 'sinon-chai';
 
@@ -336,6 +336,7 @@ describe('@sektek/base:github', function () {
           flagsGiven: {},
         }),
       ).to.equal(true);
+      expect(repoOwner.capabilities).to.deep.equal([clearable]);
     });
 
     it('exposes githubToken, shown only when createRepo is true, deriving its default the same way resolveToken does', async function () {
@@ -356,6 +357,7 @@ describe('@sektek/base:github', function () {
           flagsGiven: {},
         }),
       ).to.equal(true);
+      expect(githubToken.capabilities).to.deep.equal([clearable]);
     });
   });
 });
