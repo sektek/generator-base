@@ -19,12 +19,9 @@ export type GitGeneratorOptions = BaseOptions & {
   gitClient?: GitClient;
 };
 
-// A function, not a module-level constant: git/index.ts and github/index.ts
-// import each other's class, and referencing GithubGenerator in a
-// top-level const here would evaluate mid-cycle, before github/index.ts's
-// own class declaration has run.
-const composites = () =>
-  [{ name: 'github', generatorClass: GithubGenerator }] satisfies Composite[];
+const COMPOSITES = [
+  { name: 'github', generatorClass: GithubGenerator },
+] satisfies Composite[];
 
 export class GitGenerator extends BaseGenerator<
   BaseConfig,
@@ -32,7 +29,7 @@ export class GitGenerator extends BaseGenerator<
   BaseFeatures
 > {
   static composites(): Composite[] {
-    return composites();
+    return COMPOSITES;
   }
 
   static prompts(): Prompt[] {
@@ -45,7 +42,7 @@ export class GitGenerator extends BaseGenerator<
 
     return [
       gitInitPrompt,
-      ...composites().flatMap(({ generatorClass }) =>
+      ...COMPOSITES.flatMap(({ generatorClass }) =>
         generatorClass.prompts().map(prompt =>
           new PromptBuilder().from(prompt).create({
             includePrompt: context => context.answers.gitInit !== false,

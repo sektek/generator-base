@@ -8,7 +8,6 @@ import { helper } from '@sektek/generator-test';
 import sinonChai from 'sinon-chai';
 
 import { GitClient } from '../../lib/git/client.js';
-import { GitGenerator } from '../git/index.js';
 import { GithubClient } from '../../lib/github/client.js';
 
 import { GithubGenerator } from './index.js';
@@ -297,14 +296,6 @@ describe('@sektek/base:github', function () {
       expect(githubClient.createRepo).not.to.have.been.called;
       expect(githubClient.addRemote).not.to.have.been.called;
       expect(githubClient.push).not.to.have.been.called;
-    });
-  });
-
-  describe('composites()', function () {
-    it('composes git', function () {
-      expect(GithubGenerator.composites()).to.deep.equal([
-        { name: 'git', generatorClass: GitGenerator },
-      ]);
     });
   });
 

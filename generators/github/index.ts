@@ -1,4 +1,4 @@
-import { Composite, Prompt, PromptBuilder } from '@sektek/generator';
+import { Prompt, PromptBuilder } from '@sektek/generator';
 
 import { GithubClient, defaultGithubClient } from '../../lib/github/client.js';
 import { ApiOptions } from '../../lib/github/token.js';
@@ -6,18 +6,10 @@ import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
 import { BaseOptions } from '../../lib/types/base-options.js';
-import { GitGenerator } from '../git/index.js';
 
 const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
-
-// A function, not a module-level constant: git/index.ts and github/index.ts
-// import each other's class, and referencing GitGenerator in a top-level
-// const here would evaluate mid-cycle, before git/index.ts's own class
-// declaration has run.
-const composites = () =>
-  [{ name: 'git', generatorClass: GitGenerator }] satisfies Composite[];
 
 export type GithubGeneratorOptions = BaseOptions & {
   /**
@@ -32,10 +24,6 @@ export class GithubGenerator extends BaseGenerator<
   GithubGeneratorOptions,
   BaseFeatures
 > {
-  static composites(): Composite[] {
-    return composites();
-  }
-
   static prompts(): Prompt[] {
     return [
       new PromptBuilder().create({
@@ -92,9 +80,7 @@ export class GithubGenerator extends BaseGenerator<
       }
     }
 
-    for (const { name } of GithubGenerator.composites()) {
-      await this.composeWith(name, this.options, true);
-    }
+    await this.composeWith('git', this.options, true);
   }
 
   async taskEnd() {
