@@ -1,6 +1,11 @@
 import childProcess from 'node:child_process';
 import { promisify } from 'node:util';
 
+import {
+  ChainedOptionalProvider,
+  EnvVarOptionalProvider,
+} from '@sektek/utility-belt';
+
 /**
  * How every call in `lib/github` authenticates against the GitHub API and
  * `git push`. A dedicated type rather than a bare `token: string` parameter
@@ -17,6 +22,19 @@ const MISSING_TOKEN_MESSAGE =
   'environment variable, run `gh auth login`, or pass an explicit token.';
 
 /**
+ * The non-`explicit` half of {@link resolveToken}'s chain, shared with
+ * {@link deriveGithubToken}: `GITHUB_TOKEN` env, then `GH_TOKEN` env, then
+ * `gh auth token`.
+ */
+const envChain = new ChainedOptionalProvider<string>({
+  providers: [
+    new EnvVarOptionalProvider({ variableName: 'GITHUB_TOKEN' }),
+    new EnvVarOptionalProvider({ variableName: 'GH_TOKEN' }),
+    resolveTokenFromGhCli,
+  ],
+});
+
+/**
  * Resolves a GitHub token, trying each of the following in order and using
  * the first one that resolves to a value:
  *
@@ -31,24 +49,11 @@ const MISSING_TOKEN_MESSAGE =
  * @returns The resolved token.
  */
 export async function resolveToken(explicit?: string): Promise<string> {
-  if (explicit) {
-    return explicit;
+  const token = explicit || (await envChain.get());
+  if (!token) {
+    throw new Error(MISSING_TOKEN_MESSAGE);
   }
-
-  if (process.env.GITHUB_TOKEN) {
-    return process.env.GITHUB_TOKEN;
-  }
-
-  if (process.env.GH_TOKEN) {
-    return process.env.GH_TOKEN;
-  }
-
-  const ghToken = await resolveTokenFromGhCli();
-  if (ghToken) {
-    return ghToken;
-  }
-
-  throw new Error(MISSING_TOKEN_MESSAGE);
+  return token;
 }
 
 /**
@@ -60,11 +65,7 @@ export async function resolveToken(explicit?: string): Promise<string> {
  * @returns The resolved token, or `undefined`.
  */
 export async function deriveGithubToken(): Promise<string | undefined> {
-  try {
-    return await resolveToken();
-  } catch {
-    return undefined;
-  }
+  return envChain.get();
 }
 
 /**
