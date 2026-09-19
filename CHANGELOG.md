@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.0](https://github.com/sektek/generator-base/compare/v0.8.3...v0.9.0) (2026-09-19)
+
+### Features
+
+* **generator-base:** license consumes shared authorPrompt via PromptBuilder ([#15](https://github.com/sektek/generator-base/issues/15)) ([d8ae243](https://github.com/sektek/generator-base/commit/d8ae243e2548b1db2d08b838a24b2eb7d338a259))
+
 ## [0.8.3](https://github.com/sektek/generator-base/compare/v0.8.2...v0.8.3) (2026-09-19)
 
 ### Bug Fixes
