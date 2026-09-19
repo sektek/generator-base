@@ -1,10 +1,7 @@
 import childProcess from 'node:child_process';
 import { promisify } from 'node:util';
 
-import {
-  ChainedOptionalProvider,
-  EnvVarOptionalProvider,
-} from '@sektek/utility-belt';
+import { ChainedOptionalProvider } from '@sektek/utility-belt';
 
 /**
  * How every call in `lib/github` authenticates against the GitHub API and
@@ -22,14 +19,27 @@ const MISSING_TOKEN_MESSAGE =
   'environment variable, run `gh auth login`, or pass an explicit token.';
 
 /**
+ * Reads an environment variable, treating an empty string the same as
+ * unset — `ChainedOptionalProvider` only skips `undefined`, and an
+ * explicitly empty `GITHUB_TOKEN=''` shouldn't shadow `GH_TOKEN`/`gh auth
+ * token` or resolve to an unusable empty token.
+ *
+ * @param name - The environment variable's name.
+ * @returns Its value, or `undefined` if unset or empty.
+ */
+function nonEmptyEnvVar(name: string): string | undefined {
+  return process.env[name] || undefined;
+}
+
+/**
  * The non-`explicit` half of {@link resolveToken}'s chain, shared with
  * {@link deriveGithubToken}: `GITHUB_TOKEN` env, then `GH_TOKEN` env, then
  * `gh auth token`.
  */
 const envChain = new ChainedOptionalProvider<string>({
   providers: [
-    new EnvVarOptionalProvider({ variableName: 'GITHUB_TOKEN' }),
-    new EnvVarOptionalProvider({ variableName: 'GH_TOKEN' }),
+    () => nonEmptyEnvVar('GITHUB_TOKEN'),
+    () => nonEmptyEnvVar('GH_TOKEN'),
     resolveTokenFromGhCli,
   ],
 });

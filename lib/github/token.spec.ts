@@ -47,6 +47,27 @@ describe('lib/github/token', function () {
       expect(token).to.equal('from-gh-token');
     });
 
+    it('treats an empty GITHUB_TOKEN as unset, falling back to GH_TOKEN', async function () {
+      process.env.GITHUB_TOKEN = '';
+      process.env.GH_TOKEN = 'from-gh-token';
+
+      const token = await resolveToken();
+
+      expect(token).to.equal('from-gh-token');
+    });
+
+    it('treats an empty GH_TOKEN as unset, falling back to `gh auth token`', async function () {
+      process.env.GH_TOKEN = '';
+      sandbox
+        .stub(childProcess, 'execFile')
+        // @ts-expect-error - sinon's fake doesn't match execFile's overloads
+        .callsArgWith(2, null, { stdout: 'from-gh-cli\n', stderr: '' });
+
+      const token = await resolveToken();
+
+      expect(token).to.equal('from-gh-cli');
+    });
+
     it('falls back to `gh auth token` when no env vars are set', async function () {
       sandbox
         .stub(childProcess, 'execFile')
