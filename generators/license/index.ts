@@ -14,10 +14,6 @@ export class LicenseGenerator extends BaseGenerator<
   BaseOptions,
   BaseFeatures
 > {
-  // No license-specific includePrompt/default to layer on: today's schema
-  // prompts for author unconditionally (not gated on the license choice),
-  // so the shared prompt is included as-is rather than extended via
-  // promptBuilder.from(authorPrompt).create({...}).
   static prompts(): Prompt[] {
     return [authorPrompt];
   }
