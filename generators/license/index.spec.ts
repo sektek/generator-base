@@ -63,4 +63,13 @@ describe('@sektek/base:license', function () {
       expect(fs.exists('LICENSE')).to.be.false;
     });
   });
+
+  describe('prompts()', function () {
+    it('includes the shared author prompt', function () {
+      const prompts = LicenseGenerator.prompts();
+      const author = prompts.find(p => p.name === 'author');
+
+      expect(author).to.exist;
+    });
+  });
 });
