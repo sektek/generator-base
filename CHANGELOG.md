@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.3](https://github.com/sektek/generator-base/compare/v0.8.2...v0.8.3) (2026-09-19)
+
+### Bug Fixes
+
+* **generator-base:** composites()-driven taskInitializing + github's includeGitHub-gated prompts() ([#14](https://github.com/sektek/generator-base/issues/14)) ([e257370](https://github.com/sektek/generator-base/commit/e2573703b1e885f1f015d96c6d568bd6716b6ec6))
+
 ## [0.8.2](https://github.com/sektek/generator-base/compare/v0.8.1...v0.8.2) (2026-09-13)
 
 ### Bug Fixes
