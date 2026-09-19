@@ -4,7 +4,7 @@ import { expect, use } from 'chai';
 import sinon, { SinonSandbox } from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
 
-import { resolveToken } from './token.js';
+import { deriveGithubToken, resolveToken } from './token.js';
 
 use(chaiAsPromised);
 
@@ -47,6 +47,27 @@ describe('lib/github/token', function () {
       expect(token).to.equal('from-gh-token');
     });
 
+    it('treats an empty GITHUB_TOKEN as unset, falling back to GH_TOKEN', async function () {
+      process.env.GITHUB_TOKEN = '';
+      process.env.GH_TOKEN = 'from-gh-token';
+
+      const token = await resolveToken();
+
+      expect(token).to.equal('from-gh-token');
+    });
+
+    it('treats an empty GH_TOKEN as unset, falling back to `gh auth token`', async function () {
+      process.env.GH_TOKEN = '';
+      sandbox
+        .stub(childProcess, 'execFile')
+        // @ts-expect-error - sinon's fake doesn't match execFile's overloads
+        .callsArgWith(2, null, { stdout: 'from-gh-cli\n', stderr: '' });
+
+      const token = await resolveToken();
+
+      expect(token).to.equal('from-gh-cli');
+    });
+
     it('falls back to `gh auth token` when no env vars are set', async function () {
       sandbox
         .stub(childProcess, 'execFile')
@@ -76,6 +97,25 @@ describe('lib/github/token', function () {
       await expect(resolveToken()).to.be.rejectedWith(
         /Unable to resolve a GitHub token/,
       );
+    });
+  });
+
+  describe('deriveGithubToken', function () {
+    it('resolves the same as resolveToken when something resolves', async function () {
+      process.env.GITHUB_TOKEN = 'from-github-token';
+
+      const token = await deriveGithubToken();
+
+      expect(token).to.equal('from-github-token');
+    });
+
+    it('resolves to undefined instead of throwing when nothing resolves', async function () {
+      sandbox
+        .stub(childProcess, 'execFile')
+        // @ts-expect-error - sinon's fake doesn't match execFile's overloads
+        .callsArgWith(2, new Error('not installed'));
+
+      await expect(deriveGithubToken()).to.eventually.equal(undefined);
     });
   });
 });

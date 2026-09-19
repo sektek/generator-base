@@ -1,7 +1,12 @@
-import '../git/index.js';
+import {
+  Prompt,
+  PromptBuilder,
+  PromptContext,
+  clearable,
+} from '@sektek/generator';
 
+import { ApiOptions, deriveGithubToken } from '../../lib/github/token.js';
 import { GithubClient, defaultGithubClient } from '../../lib/github/client.js';
-import { ApiOptions } from '../../lib/github/token.js';
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
@@ -24,6 +29,36 @@ export class GithubGenerator extends BaseGenerator<
   GithubGeneratorOptions,
   BaseFeatures
 > {
+  static prompts(): Prompt[] {
+    const includeIfCreatingRepo = (context: PromptContext) =>
+      context.answers.createRepo === true;
+
+    return [
+      new PromptBuilder().create({
+        name: 'createRepo',
+        type: 'boolean',
+        label: 'Create a GitHub repository for this project?',
+        provider: () => false,
+      }),
+      new PromptBuilder().create({
+        name: 'repoOwner',
+        type: 'text',
+        label: 'GitHub owner (leave blank for your personal account)',
+        provider: () => undefined,
+        includePrompt: includeIfCreatingRepo,
+        capabilities: [clearable],
+      }),
+      new PromptBuilder().create({
+        name: 'githubToken',
+        type: 'text',
+        label: 'GitHub token (leave blank to use `gh auth token`)',
+        provider: deriveGithubToken,
+        includePrompt: includeIfCreatingRepo,
+        capabilities: [clearable],
+      }),
+    ];
+  }
+
   // Resolved once in taskInitializing (alongside the repo-exists safety
   // check, which needs a token to call the API anyway) and reused in
   // taskEnd, rather than resolving the token a second time there.
