@@ -146,4 +146,12 @@ describe('@sektek/base:app', function () {
       expect(await provide(gitInit.provider)).to.equal(true);
     });
   });
+
+  describe('destinationMode()', function () {
+    it('is newProjectDir', function () {
+      expect(AppGenerator.destinationMode()).to.deep.equal({
+        kind: 'newProjectDir',
+      });
+    });
+  });
 });

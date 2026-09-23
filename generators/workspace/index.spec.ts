@@ -72,4 +72,12 @@ describe('@sektek/base:workspace', function () {
     expect(fs.exists('.vscode/settings.json')).to.be.true;
     expect(fs.exists('.vscode/launch.json')).to.be.true;
   });
+
+  describe('destinationMode()', function () {
+    it('is newProjectDir', function () {
+      expect(WorkspaceGenerator.destinationMode()).to.deep.equal({
+        kind: 'newProjectDir',
+      });
+    });
+  });
 });

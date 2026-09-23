@@ -1,4 +1,4 @@
-import { Composite, Prompt } from '@sektek/generator';
+import { Composite, DestinationMode, Prompt } from '@sektek/generator';
 
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
@@ -33,6 +33,10 @@ export class AppGenerator extends BaseGenerator<
 > {
   static composites(): Composite[] {
     return COMPOSITES;
+  }
+
+  static destinationMode(): DestinationMode {
+    return { kind: 'newProjectDir' };
   }
 
   static prompts(): Prompt[] {
