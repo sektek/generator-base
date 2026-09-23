@@ -1,5 +1,11 @@
 import { dirname, join } from 'node:path';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import os, { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
@@ -78,6 +84,50 @@ describe('@sektek/base:config', function () {
 
     const content = fs.read('gen.config.yaml');
     expect(content).to.include('# license: "UNLICENSED"');
+  });
+
+  it('persists an explicitly-given projectName like any other resolved option', async function () {
+    const { fs } = await helper.run(generator).withOptions({
+      explicitOptionKeys: ['projectName'],
+      projectName: 'sektek-messaging-fizzy-otter',
+    });
+
+    const content = fs.read('gen.config.yaml');
+    expect(content).to.include('projectName: "sektek-messaging-fizzy-otter"');
+    expect(content).to.not.include('# projectName');
+  });
+
+  describe('inside a workspace whose own gen.config.yaml sets projectName', function () {
+    let workspaceDir: string;
+    let memberDir: string;
+
+    beforeEach(function () {
+      workspaceDir = mkdtempSync(join(tmpdir(), 'sektek-base-config-ws-'));
+      writeFileSync(
+        join(workspaceDir, 'gen.config.yaml'),
+        'projectName: sektek-messaging\n',
+      );
+      memberDir = join(workspaceDir, 'libs', 'fizzy-otter');
+      mkdirSync(memberDir, { recursive: true });
+    });
+
+    afterEach(function () {
+      rmSync(workspaceDir, { recursive: true, force: true });
+    });
+
+    it('does not re-populate projectName as a commented placeholder in the member project', async function () {
+      const { fs } = await helper
+        .run(generator)
+        .inDir(memberDir)
+        .withOptions({ explicitOptionKeys: [], projectName: undefined });
+
+      expect(fs.read(join(memberDir, 'gen.config.yaml'))).to.not.include(
+        'projectName',
+      );
+      expect(
+        readFileSync(join(workspaceDir, 'gen.config.yaml'), 'utf8'),
+      ).to.equal('projectName: sektek-messaging\n');
+    });
   });
 
   it('merges into an existing gen.config.yaml: keeps an existing value and adds a new commented key', async function () {
