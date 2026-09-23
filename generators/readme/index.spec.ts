@@ -39,4 +39,10 @@ describe('@sektek/base:readme', function () {
       /^# My Cool Project$/m,
     );
   });
+
+  it('inherits the default (inPlace) destinationMode, unlike app/workspace', function () {
+    expect(ReadmeGenerator.destinationMode()).to.deep.equal({
+      kind: 'inPlace',
+    });
+  });
 });

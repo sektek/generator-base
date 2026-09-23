@@ -3,6 +3,8 @@ import '../editorconfig/index.js';
 import '../gitconfig/index.js';
 import '../readme/index.js';
 
+import { DestinationMode } from '@sektek/generator';
+
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
@@ -22,6 +24,10 @@ export class WorkspaceGenerator extends BaseGenerator<
   BaseOptions,
   BaseFeatures
 > {
+  static destinationMode(): DestinationMode {
+    return { kind: 'newProjectDir' };
+  }
+
   constructor(
     args: string[],
     options: BaseOptions,
