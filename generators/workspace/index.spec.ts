@@ -13,6 +13,10 @@ const generator = join(__dirname, 'index.js');
 const run = () =>
   helper.run(generator).withGenerators([
     [
+      join(__dirname, '../config/index.js'),
+      { namespace: '@sektek/base:config' },
+    ],
+    [
       join(__dirname, '../devcontainer/index.js'),
       { namespace: '@sektek/base:devcontainer' },
     ],
@@ -71,6 +75,11 @@ describe('@sektek/base:workspace', function () {
     const { fs } = await run();
     expect(fs.exists('.vscode/settings.json')).to.be.true;
     expect(fs.exists('.vscode/launch.json')).to.be.true;
+  });
+
+  it('composes the config generator', async function () {
+    const { fs } = await run();
+    expect(fs.exists('gen.config.yaml')).to.be.true;
   });
 
   describe('destinationMode()', function () {

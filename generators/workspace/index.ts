@@ -1,3 +1,4 @@
+import '../config/index.js';
 import '../devcontainer/index.js';
 import '../editorconfig/index.js';
 import '../gitconfig/index.js';
@@ -51,6 +52,7 @@ export class WorkspaceGenerator extends BaseGenerator<
       { ...this.options, profile: 'workspace' },
       true,
     );
+    await this.composeWith('config', this.options, true);
   }
 
   taskWriting() {
