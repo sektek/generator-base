@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.0](https://github.com/sektek/generator-base/compare/v0.10.1...v0.11.0) (2026-10-10)
+
+### Features
+
+* **generator-base:** shared licensePrompt ([#19](https://github.com/sektek/generator-base/issues/19)) ([30b1c28](https://github.com/sektek/generator-base/commit/30b1c28fee01f7f39feac8ed3280a284e0fc21ad))
+
 ## [0.10.1](https://github.com/sektek/generator-base/compare/v0.10.0...v0.10.1) (2026-09-24)
 
 ### Bug Fixes
