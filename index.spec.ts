@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { defaultGithubClient } from './index.js';
+import { defaultGithubClient, licensePrompt } from './index.js';
 
 describe('index', function () {
   it('exports defaultGithubClient as a function', function () {
@@ -11,5 +11,9 @@ describe('index', function () {
     const client = defaultGithubClient();
     expect(client.resolveToken).to.be.a('function');
     expect(client.repoExists).to.be.a('function');
+  });
+
+  it('exports licensePrompt', function () {
+    expect(licensePrompt.name).to.equal('license');
   });
 });

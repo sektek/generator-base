@@ -71,5 +71,14 @@ describe('@sektek/base:license', function () {
 
       expect(author).to.exist;
     });
+
+    it('includes the shared license prompt', function () {
+      const prompts = LicenseGenerator.prompts();
+
+      expect(prompts.map(p => p.name)).to.include.members([
+        'author',
+        'license',
+      ]);
+    });
   });
 });
