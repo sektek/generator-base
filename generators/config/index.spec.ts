@@ -13,6 +13,8 @@ import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
 import sinon from 'sinon';
 
+import { AppGenerator } from '../app/index.js';
+
 import { ConfigGenerator } from './index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +33,25 @@ describe('@sektek/base:config', function () {
   afterEach(function () {
     homedirStub.restore();
     rmSync(homeDir, { recursive: true, force: true });
+  });
+
+  describe('prompts()', function () {
+    it('declares exactly the configFile prompt', function () {
+      const prompts = ConfigGenerator.prompts();
+
+      expect(prompts).to.have.lengthOf(1);
+      expect(prompts[0]).to.include({
+        name: 'configFile',
+        type: 'text',
+        label:
+          'gen.config.* path (blank = gen.config.yaml at the destination root)',
+      });
+    });
+
+    it("is included in AppGenerator's flattened prompts", function () {
+      const names = AppGenerator.prompts().map(p => p.name);
+      expect(names).to.include('configFile');
+    });
   });
 
   it('generates using ConfigGenerator', async function () {

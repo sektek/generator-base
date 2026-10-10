@@ -3,8 +3,12 @@ import { dirname, extname, isAbsolute, join } from 'node:path';
 import os from 'node:os';
 import { pathToFileURL } from 'node:url';
 
+import {
+  Prompt,
+  PromptBuilder,
+  resolveConfigDefaults,
+} from '@sektek/generator';
 import { parse as parseYaml } from 'yaml';
-import { resolveConfigDefaults } from '@sektek/generator';
 
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
@@ -81,6 +85,18 @@ export class ConfigGenerator extends BaseGenerator<
   BaseOptions,
   BaseFeatures
 > {
+  static prompts(): Prompt[] {
+    return [
+      new PromptBuilder().create({
+        name: 'configFile',
+        type: 'text',
+        label:
+          'gen.config.* path (blank = gen.config.yaml at the destination root)',
+        provider: () => undefined,
+      }),
+    ];
+  }
+
   constructor(
     args: string[],
     options: BaseOptions,
