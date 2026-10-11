@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.1](https://github.com/sektek/generator-base/compare/v0.12.0...v0.12.1) (2026-10-11)
+
+### Bug Fixes
+
+* **generator-base:** devcontainer templates — workspace uses docker-in-docker 4, default drops the Docker feature and extension ([#22](https://github.com/sektek/generator-base/issues/22)) ([bd6c25c](https://github.com/sektek/generator-base/commit/bd6c25c8a2cd6b62f08fe2cf10e5b67018f0b1f0))
+
 ## [0.12.0](https://github.com/sektek/generator-base/compare/v0.11.0...v0.12.0) (2026-10-11)
 
 ### Features
