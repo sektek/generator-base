@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.0](https://github.com/sektek/generator-base/compare/v0.11.0...v0.12.0) (2026-10-11)
+
+### Features
+
+* **generator-base:** config generator declares its configFile prompt ([#20](https://github.com/sektek/generator-base/issues/20)) ([dd1db08](https://github.com/sektek/generator-base/commit/dd1db0802600f8271c109b979a0ff201a9abb735))
+
 ## [0.11.0](https://github.com/sektek/generator-base/compare/v0.10.1...v0.11.0) (2026-10-10)
 
 ### Features
