@@ -1,3 +1,5 @@
+import { Prompt, profilePrompt } from '@sektek/generator';
+
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
@@ -25,6 +27,10 @@ export class DevcontainerGenerator extends BaseGenerator<
   BaseOptions,
   BaseFeatures
 > {
+  static prompts(): Prompt[] {
+    return [profilePrompt];
+  }
+
   constructor(
     args: string[],
     options: BaseOptions,

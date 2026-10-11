@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
+import { profilePrompt } from '@sektek/generator';
 
 import { DevcontainerGenerator } from './index.js';
 
@@ -17,6 +18,12 @@ describe('@sektek/base:devcontainer', function () {
   it('generates using DevcontainerGenerator', async function () {
     const result = await run();
     expect(result.generator).to.be.instanceOf(DevcontainerGenerator);
+  });
+
+  describe('prompts()', function () {
+    it('declares the shared profilePrompt', function () {
+      expect(DevcontainerGenerator.prompts()).to.include(profilePrompt);
+    });
   });
 
   describe('with the default profile', function () {
