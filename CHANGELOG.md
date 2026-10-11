@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/sektek/generator-base/compare/v0.13.0...v0.14.0) (2026-10-11)
+
+### Features
+
+* **generator-base:** github declares repoVisibility and push prompts, createRepo gated on gitInit ([#23](https://github.com/sektek/generator-base/issues/23)) ([2784b19](https://github.com/sektek/generator-base/commit/2784b1943c7d3a989f9fbda2a0d54e96bbfbf919))
+* **generator-base:** readme declares the shared descriptionPrompt ([#24](https://github.com/sektek/generator-base/issues/24)) ([337a5df](https://github.com/sektek/generator-base/commit/337a5df85f60fbad686e395f61269175102273b1))
+
 ## [0.13.0](https://github.com/sektek/generator-base/compare/v0.12.1...v0.13.0) (2026-10-11)
 
 ### Features
