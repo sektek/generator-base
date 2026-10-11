@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.13.0](https://github.com/sektek/generator-base/compare/v0.12.1...v0.13.0) (2026-10-11)
+
+### Features
+
+* **generator-base:** workspace declares the shared profilePrompt ([#26](https://github.com/sektek/generator-base/issues/26)) ([c3db9de](https://github.com/sektek/generator-base/commit/c3db9de4c4579ab87ce40cc9480526116617e434))
+
 ## [0.12.1](https://github.com/sektek/generator-base/compare/v0.12.0...v0.12.1) (2026-10-11)
 
 ### Bug Fixes
