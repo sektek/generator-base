@@ -29,6 +29,24 @@ describe('@sektek/base:devcontainer', function () {
       );
     });
 
+    it('declares no devcontainer features', async function () {
+      const { fs } = await run();
+      expect(
+        JSON.parse(fs.read('.devcontainer/devcontainer.json')),
+      ).to.not.have.property('features');
+    });
+
+    it('does not recommend the Docker VS Code extension', async function () {
+      const { fs } = await run();
+      const devcontainer = JSON.parse(
+        fs.read('.devcontainer/devcontainer.json'),
+      );
+
+      expect(devcontainer.customizations.vscode.extensions).to.not.include(
+        'ms-azuretools.vscode-docker',
+      );
+    });
+
     it('does not generate a docker-compose.yml', async function () {
       const { fs } = await run();
       expect(fs.exists('.devcontainer/docker-compose.yml')).to.be.false;
@@ -44,6 +62,23 @@ describe('@sektek/base:devcontainer', function () {
       );
       expect(fs.exists('.devcontainer/docker-compose.yml')).to.be.true;
       expect(fs.exists('.devcontainer/Dockerfile')).to.be.true;
+    });
+
+    it('uses docker-in-docker without a Compose plugin', async function () {
+      const { fs } = await run({ profile: 'workspace' });
+      const { features } = JSON.parse(
+        fs.read('.devcontainer/devcontainer.json'),
+      );
+
+      expect(features).to.have.property(
+        'ghcr.io/devcontainers/features/docker-in-docker:4',
+      );
+      expect(
+        features['ghcr.io/devcontainers/features/docker-in-docker:4'],
+      ).to.include({ dockerDashComposeVersion: 'none' });
+      expect(features).to.not.have.property(
+        'ghcr.io/devcontainers/features/docker-outside-of-docker:1',
+      );
     });
   });
 });
