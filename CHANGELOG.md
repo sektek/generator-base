@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.1](https://github.com/sektek/generator-base/compare/v0.15.0...v0.15.1) (2026-10-11)
+
+### Bug Fixes
+
+* **generator-base:** repoVisibility defaults to private for UNLICENSED and public otherwise ([#27](https://github.com/sektek/generator-base/issues/27)) ([0f8ac99](https://github.com/sektek/generator-base/commit/0f8ac9925eb881ec56d7303a8af35f0ac615fadb))
+
 ## [0.15.0](https://github.com/sektek/generator-base/compare/v0.14.0...v0.15.0) (2026-10-11)
 
 ### Features
