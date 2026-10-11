@@ -6,7 +6,10 @@
   "shutdownAction": "none",
   "containerUser": "dev",
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": { "moby": false }
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false,
+      "dockerDashComposeVersion": "none"
+    }
   },
   "customizations": {
     "vscode": {
