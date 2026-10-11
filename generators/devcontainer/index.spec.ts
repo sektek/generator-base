@@ -29,6 +29,13 @@ describe('@sektek/base:devcontainer', function () {
       );
     });
 
+    it('declares no devcontainer features', async function () {
+      const { fs } = await run();
+      expect(
+        JSON.parse(fs.read('.devcontainer/devcontainer.json')),
+      ).to.not.have.property('features');
+    });
+
     it('does not generate a docker-compose.yml', async function () {
       const { fs } = await run();
       expect(fs.exists('.devcontainer/docker-compose.yml')).to.be.false;
