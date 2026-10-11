@@ -371,5 +371,77 @@ describe('@sektek/base:github', function () {
       ).to.equal(true);
       expect(githubToken.capabilities).to.deep.equal([clearable]);
     });
+
+    it('gates createRepo on gitInit not being false', async function () {
+      const createRepo = GithubGenerator.prompts().find(
+        p => p.name === 'createRepo',
+      )!;
+      const check = (answers: Record<string, unknown>) =>
+        included(createRepo.includePrompt, {
+          answers,
+          flagsGiven: {},
+          configDefaults: {},
+        });
+
+      expect(await check({ gitInit: false })).to.equal(false);
+      expect(await check({ gitInit: true })).to.equal(true);
+      expect(await check({})).to.equal(true);
+    });
+
+    it('exposes repoVisibility, shown only when creating a repo for a non-UNLICENSED project, defaulting to private', async function () {
+      const repoVisibility = GithubGenerator.prompts().find(
+        p => p.name === 'repoVisibility',
+      )!;
+      const check = (answers: Record<string, unknown>) =>
+        included(repoVisibility.includePrompt, {
+          answers,
+          flagsGiven: {},
+          configDefaults: {},
+        });
+
+      expect(repoVisibility).to.exist;
+      expect(repoVisibility.type).to.equal('select');
+      expect(repoVisibility.label).to.equal('Repo visibility');
+      expect(repoVisibility.choices).to.deep.equal(['public', 'private']);
+      expect(
+        await provide(repoVisibility.provider, {
+          answers: {},
+          flagsGiven: {},
+          configDefaults: {},
+        }),
+      ).to.equal('private');
+      expect(await check({})).to.equal(false);
+      expect(await check({ createRepo: false, license: 'MIT' })).to.equal(
+        false,
+      );
+      expect(await check({ createRepo: true, license: 'MIT' })).to.equal(true);
+      expect(await check({ createRepo: true })).to.equal(true);
+      expect(await check({ createRepo: true, license: 'UNLICENSED' })).to.equal(
+        false,
+      );
+    });
+
+    it('exposes push, shown only when createRepo is true, defaulting to true', async function () {
+      const push = GithubGenerator.prompts().find(p => p.name === 'push')!;
+      const check = (answers: Record<string, unknown>) =>
+        included(push.includePrompt, {
+          answers,
+          flagsGiven: {},
+          configDefaults: {},
+        });
+
+      expect(push).to.exist;
+      expect(push.type).to.equal('boolean');
+      expect(push.label).to.equal('Push after committing?');
+      expect(
+        await provide(push.provider, {
+          answers: {},
+          flagsGiven: {},
+          configDefaults: {},
+        }),
+      ).to.equal(true);
+      expect(await check({ createRepo: false })).to.equal(false);
+      expect(await check({ createRepo: true })).to.equal(true);
+    });
   });
 });

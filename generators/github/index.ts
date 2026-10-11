@@ -39,6 +39,7 @@ export class GithubGenerator extends BaseGenerator<
         type: 'boolean',
         label: 'Create a GitHub repository for this project?',
         provider: () => false,
+        includePrompt: context => context.answers.gitInit !== false,
       }),
       new PromptBuilder().create({
         name: 'repoOwner',
@@ -55,6 +56,23 @@ export class GithubGenerator extends BaseGenerator<
         provider: deriveGithubToken,
         includePrompt: includeIfCreatingRepo,
         capabilities: [clearable],
+      }),
+      new PromptBuilder().create({
+        name: 'repoVisibility',
+        type: 'select',
+        choices: ['public', 'private'],
+        label: 'Repo visibility',
+        provider: () => 'private',
+        includePrompt: context =>
+          includeIfCreatingRepo(context) &&
+          context.answers.license !== 'UNLICENSED',
+      }),
+      new PromptBuilder().create({
+        name: 'push',
+        type: 'boolean',
+        label: 'Push after committing?',
+        provider: () => true,
+        includePrompt: includeIfCreatingRepo,
       }),
     ];
   }
