@@ -53,10 +53,10 @@ describe('@sektek/base:devcontainer', function () {
       );
 
       expect(features).to.have.property(
-        'ghcr.io/devcontainers/features/docker-in-docker:2',
+        'ghcr.io/devcontainers/features/docker-in-docker:4',
       );
       expect(
-        features['ghcr.io/devcontainers/features/docker-in-docker:2'],
+        features['ghcr.io/devcontainers/features/docker-in-docker:4'],
       ).to.include({ dockerDashComposeVersion: 'none' });
       expect(features).to.not.have.property(
         'ghcr.io/devcontainers/features/docker-outside-of-docker:1',
