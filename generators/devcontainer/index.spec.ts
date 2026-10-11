@@ -36,6 +36,17 @@ describe('@sektek/base:devcontainer', function () {
       ).to.not.have.property('features');
     });
 
+    it('does not recommend the Docker VS Code extension', async function () {
+      const { fs } = await run();
+      const devcontainer = JSON.parse(
+        fs.read('.devcontainer/devcontainer.json'),
+      );
+
+      expect(devcontainer.customizations.vscode.extensions).to.not.include(
+        'ms-azuretools.vscode-docker',
+      );
+    });
+
     it('does not generate a docker-compose.yml', async function () {
       const { fs } = await run();
       expect(fs.exists('.devcontainer/docker-compose.yml')).to.be.false;
