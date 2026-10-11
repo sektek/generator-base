@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.0](https://github.com/sektek/generator-base/compare/v0.14.0...v0.15.0) (2026-10-11)
+
+### Features
+
+* **generator-base:** devcontainer declares the shared profilePrompt ([#25](https://github.com/sektek/generator-base/issues/25)) ([0f7b45c](https://github.com/sektek/generator-base/commit/0f7b45cea3a4ac14f50dc884ebe77be709d73722))
+
 ## [0.14.0](https://github.com/sektek/generator-base/compare/v0.13.0...v0.14.0) (2026-10-11)
 
 ### Features
