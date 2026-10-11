@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
+import { profilePrompt } from '@sektek/generator';
 
 import { WorkspaceGenerator } from './index.js';
 
@@ -80,6 +81,12 @@ describe('@sektek/base:workspace', function () {
   it('composes the config generator', async function () {
     const { fs } = await run();
     expect(fs.exists('gen.config.yaml')).to.be.true;
+  });
+
+  describe('prompts()', function () {
+    it('declares the shared profilePrompt', function () {
+      expect(WorkspaceGenerator.prompts()).to.include(profilePrompt);
+    });
   });
 
   describe('destinationMode()', function () {
