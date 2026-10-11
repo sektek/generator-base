@@ -9,9 +9,13 @@ import {
 import os, { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
+import { ProviderFn, getComponent } from '@sektek/utility-belt';
+import { PromptContext } from '@sektek/generator';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
 import sinon from 'sinon';
+
+import { AppGenerator } from '../app/index.js';
 
 import { ConfigGenerator } from './index.js';
 
@@ -31,6 +35,40 @@ describe('@sektek/base:config', function () {
   afterEach(function () {
     homedirStub.restore();
     rmSync(homeDir, { recursive: true, force: true });
+  });
+
+  describe('prompts()', function () {
+    it('declares exactly the configFile prompt', function () {
+      const prompts = ConfigGenerator.prompts();
+
+      expect(prompts).to.have.lengthOf(1);
+      expect(prompts[0]).to.include({
+        name: 'configFile',
+        type: 'text',
+        label:
+          'gen.config.* path (blank = gen.config.yaml at the destination root)',
+      });
+    });
+
+    it('has no default (provider resolves to undefined)', async function () {
+      const [configFile] = ConfigGenerator.prompts();
+      const context: PromptContext = {
+        answers: {},
+        flagsGiven: {},
+        configDefaults: {},
+      };
+      const get: ProviderFn<unknown, PromptContext> = getComponent(
+        configFile.provider,
+        'get',
+      );
+
+      expect(await get(context)).to.equal(undefined);
+    });
+
+    it("is included in AppGenerator's flattened prompts", function () {
+      const names = AppGenerator.prompts().map(p => p.name);
+      expect(names).to.include('configFile');
+    });
   });
 
   it('generates using ConfigGenerator', async function () {
