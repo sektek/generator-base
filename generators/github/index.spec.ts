@@ -388,7 +388,7 @@ describe('@sektek/base:github', function () {
       expect(await check({})).to.equal(true);
     });
 
-    it('exposes repoVisibility, shown only when creating a repo for a non-UNLICENSED project, defaulting to private', async function () {
+    it('exposes repoVisibility, shown whenever a repo is being created', async function () {
       const repoVisibility = GithubGenerator.prompts().find(
         p => p.name === 'repoVisibility',
       )!;
@@ -403,13 +403,6 @@ describe('@sektek/base:github', function () {
       expect(repoVisibility.type).to.equal('select');
       expect(repoVisibility.label).to.equal('Repo visibility');
       expect(repoVisibility.choices).to.deep.equal(['public', 'private']);
-      expect(
-        await provide(repoVisibility.provider, {
-          answers: {},
-          flagsGiven: {},
-          configDefaults: {},
-        }),
-      ).to.equal('private');
       expect(await check({})).to.equal(false);
       expect(await check({ createRepo: false, license: 'MIT' })).to.equal(
         false,
@@ -417,8 +410,24 @@ describe('@sektek/base:github', function () {
       expect(await check({ createRepo: true, license: 'MIT' })).to.equal(true);
       expect(await check({ createRepo: true })).to.equal(true);
       expect(await check({ createRepo: true, license: 'UNLICENSED' })).to.equal(
-        false,
+        true,
       );
+    });
+
+    it('defaults repoVisibility to private for UNLICENSED and public otherwise', async function () {
+      const repoVisibility = GithubGenerator.prompts().find(
+        p => p.name === 'repoVisibility',
+      )!;
+      const defaultFor = (answers: Record<string, unknown>) =>
+        provide(repoVisibility.provider, {
+          answers,
+          flagsGiven: {},
+          configDefaults: {},
+        });
+
+      expect(await defaultFor({ license: 'UNLICENSED' })).to.equal('private');
+      expect(await defaultFor({ license: 'MIT' })).to.equal('public');
+      expect(await defaultFor({})).to.equal('public');
     });
 
     it('exposes push, shown only when createRepo is true, defaulting to true', async function () {

@@ -62,10 +62,9 @@ export class GithubGenerator extends BaseGenerator<
         type: 'select',
         choices: ['public', 'private'],
         label: 'Repo visibility',
-        provider: () => 'private',
-        includePrompt: context =>
-          includeIfCreatingRepo(context) &&
-          context.answers.license !== 'UNLICENSED',
+        provider: (context: PromptContext) =>
+          context.answers.license === 'UNLICENSED' ? 'private' : 'public',
+        includePrompt: includeIfCreatingRepo,
       }),
       new PromptBuilder().create({
         name: 'push',
