@@ -2,8 +2,11 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { tmpdir } from 'os';
 
+import { descriptionPrompt } from '@sektek/generator';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
+
+import { AppGenerator } from '../app/index.js';
 
 import { ReadmeGenerator } from './index.js';
 
@@ -44,5 +47,17 @@ describe('@sektek/base:readme', function () {
     expect(ReadmeGenerator.destinationMode()).to.deep.equal({
       kind: 'inPlace',
     });
+  });
+
+  it('declares the shared descriptionPrompt', function () {
+    expect(ReadmeGenerator.prompts()).to.have.lengthOf(1);
+    expect(ReadmeGenerator.prompts()[0]).to.equal(descriptionPrompt);
+  });
+
+  it('contributes description to AppGenerator.prompts() once deduped by name', function () {
+    const descriptions = AppGenerator.prompts().filter(
+      ({ name }) => name === 'description',
+    );
+    expect(new Set(descriptions)).to.deep.equal(new Set([descriptionPrompt]));
   });
 });

@@ -1,3 +1,4 @@
+import { Prompt, descriptionPrompt } from '@sektek/generator';
 import startCase from 'lodash/startCase.js';
 
 import { BaseConfig } from '../../lib/types/base-config.js';
@@ -14,6 +15,10 @@ export class ReadmeGenerator extends BaseGenerator<
   BaseOptions,
   BaseFeatures
 > {
+  static prompts(): Prompt[] {
+    return [descriptionPrompt];
+  }
+
   constructor(
     args: string[],
     options: BaseOptions,
