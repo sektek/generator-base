@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { ProviderFn, getComponent } from '@sektek/utility-belt';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
+import { projectNamePrompt } from '@sektek/generator';
 
 import { AppGenerator } from './index.js';
 
@@ -132,6 +133,12 @@ describe('@sektek/base:app', function () {
   });
 
   describe('prompts()', function () {
+    it('declares the shared projectNamePrompt first', function () {
+      const prompts = AppGenerator.prompts();
+      expect(prompts[0]).to.equal(projectNamePrompt);
+      expect(prompts.filter(p => p === projectNamePrompt)).to.have.length(1);
+    });
+
     it("aggregates every composed sub-generator's prompts", async function () {
       const prompts = AppGenerator.prompts();
       const names = prompts.map(p => p.name);
