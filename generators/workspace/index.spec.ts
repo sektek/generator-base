@@ -1,9 +1,9 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
+import { profilePrompt, projectNamePrompt } from '@sektek/generator';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
-import { profilePrompt } from '@sektek/generator';
 
 import { WorkspaceGenerator } from './index.js';
 
@@ -84,8 +84,11 @@ describe('@sektek/base:workspace', function () {
   });
 
   describe('prompts()', function () {
-    it('declares the shared profilePrompt', function () {
-      expect(WorkspaceGenerator.prompts()).to.include(profilePrompt);
+    it('declares projectNamePrompt first, then profilePrompt', function () {
+      expect(WorkspaceGenerator.prompts()).to.deep.equal([
+        projectNamePrompt,
+        profilePrompt,
+      ]);
     });
   });
 
