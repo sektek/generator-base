@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.17.0](https://github.com/sektek/generator-base/compare/v0.16.0...v0.17.0) (2026-10-18)
+
+### Features
+
+* **generator-base:** workspace declares the shared projectNamePrompt ([#29](https://github.com/sektek/generator-base/issues/29)) ([8036438](https://github.com/sektek/generator-base/commit/80364382ad7fcde86315e7f3af748c7e2b21fde2))
+
 ## [0.16.0](https://github.com/sektek/generator-base/compare/v0.15.1...v0.16.0) (2026-10-18)
 
 ### Features
