@@ -122,9 +122,9 @@ describe('@sektek/base:app', function () {
       // git/index.spec.ts), not a top-level app concern.
       expect(AppGenerator.composites().map(({ name }) => name)).to.deep.equal([
         'editorconfig',
+        'license',
         'git',
         'gitconfig',
-        'license',
         'readme',
         'devcontainer',
         'config',
@@ -151,6 +151,24 @@ describe('@sektek/base:app', function () {
 
       const gitInit = prompts.find(p => p.name === 'gitInit')!;
       expect(await provide(gitInit.provider)).to.equal(true);
+    });
+  });
+
+  describe('prompts() order', function () {
+    it('asks for license before the git and github options', function () {
+      const names = AppGenerator.prompts().map(p => p.name);
+      const license = names.indexOf('license');
+      expect(license).to.be.greaterThan(-1);
+      for (const name of [
+        'gitInit',
+        'createRepo',
+        'repoOwner',
+        'githubToken',
+        'repoVisibility',
+        'push',
+      ]) {
+        expect(names.indexOf(name), name).to.be.greaterThan(license);
+      }
     });
   });
 
