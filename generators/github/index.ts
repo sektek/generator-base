@@ -53,7 +53,11 @@ export class GithubGenerator extends BaseGenerator<
         name: 'githubToken',
         type: 'text',
         label: 'GitHub token (leave blank to use `gh auth token`)',
-        provider: deriveGithubToken,
+        // Derive only when a repo is being created: gen evaluates providers
+        // for gated-out prompts too, and this one reads the environment and
+        // spawns `gh`.
+        provider: (context: PromptContext) =>
+          includeIfCreatingRepo(context) ? deriveGithubToken() : undefined,
         includePrompt: includeIfCreatingRepo,
         capabilities: [clearable],
       }),

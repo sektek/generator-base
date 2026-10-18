@@ -1,16 +1,16 @@
 import { dirname, join } from 'path';
+import childProcess from 'node:child_process';
 import { fileURLToPath } from 'url';
 
 import { PredicateFn, ProviderFn, getComponent } from '@sektek/utility-belt';
 import { PromptContext, clearable } from '@sektek/generator';
 import { expect, use } from 'chai';
-import sinon, { SinonStub } from 'sinon';
+import sinon, { SinonSandbox, SinonStub } from 'sinon';
 import { helper } from '@sektek/generator-test';
 import sinonChai from 'sinon-chai';
 
 import { GitClient } from '../../lib/git/client.js';
 import { GithubClient } from '../../lib/github/client.js';
-import { deriveGithubToken } from '../../lib/github/token.js';
 
 import { GithubGenerator } from './index.js';
 
@@ -356,7 +356,6 @@ describe('@sektek/base:github', function () {
       const githubToken = prompts.find(p => p.name === 'githubToken')!;
 
       expect(githubToken).to.exist;
-      expect(githubToken.provider).to.equal(deriveGithubToken);
       expect(
         await included(githubToken.includePrompt, {
           answers: { createRepo: false },
@@ -370,6 +369,72 @@ describe('@sektek/base:github', function () {
         }),
       ).to.equal(true);
       expect(githubToken.capabilities).to.deep.equal([clearable]);
+    });
+
+    describe('githubToken provider', function () {
+      const FAKE_ENV_TOKEN = 'fake-env-token';
+      let sandbox: SinonSandbox;
+      let execFile: SinonStub;
+      let savedEnv: Record<string, string | undefined>;
+
+      const derive = (answers: Record<string, unknown>) => {
+        const githubToken = GithubGenerator.prompts().find(
+          p => p.name === 'githubToken',
+        )!;
+        const get = githubToken.provider as (
+          context: PromptContext,
+        ) => Promise<string | undefined> | string | undefined;
+        return get({ answers, flagsGiven: {}, configDefaults: {} });
+      };
+
+      beforeEach(function () {
+        sandbox = sinon.createSandbox();
+        savedEnv = {
+          GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+          GH_TOKEN: process.env.GH_TOKEN,
+        };
+        process.env.GITHUB_TOKEN = FAKE_ENV_TOKEN;
+        delete process.env.GH_TOKEN;
+        execFile = sandbox
+          .stub(childProcess, 'execFile')
+          // @ts-expect-error - sinon's fake doesn't match execFile's overloads
+          .callsArgWith(2, null, { stdout: 'fake-gh-token\n', stderr: '' });
+      });
+
+      afterEach(function () {
+        sandbox.restore();
+        for (const [key, value] of Object.entries(savedEnv)) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+      });
+
+      for (const [label, answers] of [
+        ['createRepo is false', { createRepo: false }],
+        ['createRepo is unset', {}],
+      ] as const) {
+        it(`derives nothing, reading neither env nor gh, when ${label}`, async function () {
+          // With an env token set, a derived value would be returned.
+          expect(await derive(answers)).to.equal(undefined);
+
+          // With none set, the chain would fall through to `gh`.
+          delete process.env.GITHUB_TOKEN;
+          expect(await derive(answers)).to.equal(undefined);
+          expect(execFile).not.to.have.been.called;
+        });
+      }
+
+      it('derives from the environment when createRepo is true', async function () {
+        expect(await derive({ createRepo: true })).to.equal(FAKE_ENV_TOKEN);
+        expect(execFile).not.to.have.been.called;
+      });
+
+      it('falls back to `gh auth token` when createRepo is true and no env token is set', async function () {
+        delete process.env.GITHUB_TOKEN;
+
+        expect(await derive({ createRepo: true })).to.equal('fake-gh-token');
+        expect(execFile).to.have.been.calledOnce;
+      });
     });
 
     it('gates createRepo on gitInit not being false', async function () {
