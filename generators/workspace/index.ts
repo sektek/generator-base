@@ -4,7 +4,12 @@ import '../editorconfig/index.js';
 import '../gitconfig/index.js';
 import '../readme/index.js';
 
-import { DestinationMode, Prompt, profilePrompt } from '@sektek/generator';
+import {
+  DestinationMode,
+  Prompt,
+  profilePrompt,
+  projectNamePrompt,
+} from '@sektek/generator';
 
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
@@ -30,7 +35,7 @@ export class WorkspaceGenerator extends BaseGenerator<
   }
 
   static prompts(): Prompt[] {
-    return [profilePrompt];
+    return [projectNamePrompt, profilePrompt];
   }
 
   constructor(
