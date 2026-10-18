@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.1](https://github.com/sektek/generator-base/compare/v0.18.0...v0.18.1) (2026-10-18)
+
+### Bug Fixes
+
+* **generator-base:** app asks for license before it asks for the git and github options ([#31](https://github.com/sektek/generator-base/issues/31)) ([8c4cbf3](https://github.com/sektek/generator-base/commit/8c4cbf3af73225acb2dd3bd4b68096b51e587e98))
+
 ## [0.18.0](https://github.com/sektek/generator-base/compare/v0.17.0...v0.18.0) (2026-10-18)
 
 ### Features
