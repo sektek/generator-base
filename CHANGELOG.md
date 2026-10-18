@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.2](https://github.com/sektek/generator-base/compare/v0.18.1...v0.18.2) (2026-10-18)
+
+### Bug Fixes
+
+* **generator-base:** repoVisibility defaults to private when no license is set ([#32](https://github.com/sektek/generator-base/issues/32)) ([1f26860](https://github.com/sektek/generator-base/commit/1f26860d4db5a96e331da758bc8b6f3b97c6a209))
+
 ## [0.18.1](https://github.com/sektek/generator-base/compare/v0.18.0...v0.18.1) (2026-10-18)
 
 ### Bug Fixes
