@@ -1,9 +1,9 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-import { profilePrompt, projectNamePrompt } from '@sektek/generator';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
+import { projectNamePrompt } from '@sektek/generator';
 
 import { WorkspaceGenerator } from './index.js';
 
@@ -83,13 +83,38 @@ describe('@sektek/base:workspace', function () {
     expect(fs.exists('gen.config.yaml')).to.be.true;
   });
 
-  describe('prompts()', function () {
-    it('declares projectNamePrompt first, then profilePrompt', function () {
-      expect(WorkspaceGenerator.prompts()).to.deep.equal([
-        projectNamePrompt,
-        profilePrompt,
+  describe('composites()', function () {
+    it('lists the composed generators, in order', function () {
+      expect(
+        WorkspaceGenerator.composites().map(({ name }) => name),
+      ).to.deep.equal([
+        'editorconfig',
+        'gitconfig',
+        'readme',
+        'devcontainer',
+        'config',
       ]);
     });
+  });
+
+  describe('prompts()', function () {
+    it('declares the shared projectNamePrompt first', function () {
+      const prompts = WorkspaceGenerator.prompts();
+      expect(prompts[0]).to.equal(projectNamePrompt);
+      expect(prompts.filter(p => p === projectNamePrompt)).to.have.length(1);
+    });
+
+    // The flattening does not de-duplicate, so a name may repeat; every
+    // entry must then be the same shared prompt object.
+    for (const name of ['description', 'configFile', 'profile']) {
+      it(`brings in ${name} from a composed generator`, function () {
+        const matches = WorkspaceGenerator.prompts().filter(
+          p => p.name === name,
+        );
+        expect(matches).to.not.be.empty;
+        expect(new Set(matches).size).to.equal(1);
+      });
+    }
   });
 
   describe('destinationMode()', function () {

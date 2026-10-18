@@ -1,13 +1,7 @@
-import '../config/index.js';
-import '../devcontainer/index.js';
-import '../editorconfig/index.js';
-import '../gitconfig/index.js';
-import '../readme/index.js';
-
 import {
+  Composite,
   DestinationMode,
   Prompt,
-  profilePrompt,
   projectNamePrompt,
 } from '@sektek/generator';
 
@@ -15,6 +9,11 @@ import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
 import { BaseOptions } from '../../lib/types/base-options.js';
+import { ConfigGenerator } from '../config/index.js';
+import { DevcontainerGenerator } from '../devcontainer/index.js';
+import { EditorConfigGenerator } from '../editorconfig/index.js';
+import { GitConfigGenerator } from '../gitconfig/index.js';
+import { ReadmeGenerator } from '../readme/index.js';
 
 const VSCODE_TEMPLATES = {
   'settings.json.ejs': '.vscode/settings.json',
@@ -25,17 +24,29 @@ const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
 
+const COMPOSITES = [
+  { name: 'editorconfig', generatorClass: EditorConfigGenerator },
+  { name: 'gitconfig', generatorClass: GitConfigGenerator },
+  { name: 'readme', generatorClass: ReadmeGenerator },
+  { name: 'devcontainer', generatorClass: DevcontainerGenerator },
+  { name: 'config', generatorClass: ConfigGenerator },
+] satisfies Composite[];
+
 export class WorkspaceGenerator extends BaseGenerator<
   BaseConfig,
   BaseOptions,
   BaseFeatures
 > {
+  static composites(): Composite[] {
+    return COMPOSITES;
+  }
+
   static destinationMode(): DestinationMode {
     return { kind: 'newProjectDir' };
   }
 
   static prompts(): Prompt[] {
-    return [projectNamePrompt, profilePrompt];
+    return [projectNamePrompt, ...super.prompts()];
   }
 
   constructor(
@@ -53,15 +64,15 @@ export class WorkspaceGenerator extends BaseGenerator<
   // this generator's own task queue is built, so readme writes README.md
   // before our own taskWriting appends the checklist to it.
   async beforeQueue() {
-    await this.composeWith('editorconfig', this.options, true);
-    await this.composeWith('gitconfig', this.options, true);
-    await this.composeWith('readme', this.options, true);
-    await this.composeWith(
-      'devcontainer',
-      { ...this.options, profile: 'workspace' },
-      true,
-    );
-    await this.composeWith('config', this.options, true);
+    for (const { name } of WorkspaceGenerator.composites()) {
+      await this.composeWith(
+        name,
+        name === 'devcontainer'
+          ? { ...this.options, profile: 'workspace' }
+          : this.options,
+        true,
+      );
+    }
   }
 
   taskWriting() {
