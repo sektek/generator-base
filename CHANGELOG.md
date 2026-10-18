@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.0](https://github.com/sektek/generator-base/compare/v0.17.0...v0.18.0) (2026-10-18)
+
+### Features
+
+* **generator-base:** workspace brings in its composed generators' prompts through composites() ([#30](https://github.com/sektek/generator-base/issues/30)) ([562c244](https://github.com/sektek/generator-base/commit/562c2445c1f5523fe1de110508190ce5be5d437d))
+
 ## [0.17.0](https://github.com/sektek/generator-base/compare/v0.16.0...v0.17.0) (2026-10-18)
 
 ### Features
