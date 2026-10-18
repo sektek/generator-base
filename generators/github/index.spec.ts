@@ -414,7 +414,7 @@ describe('@sektek/base:github', function () {
       );
     });
 
-    it('defaults repoVisibility to private for UNLICENSED and public otherwise', async function () {
+    it('defaults repoVisibility to public only for a license other than UNLICENSED, and private without a license', async function () {
       const repoVisibility = GithubGenerator.prompts().find(
         p => p.name === 'repoVisibility',
       )!;
@@ -427,7 +427,7 @@ describe('@sektek/base:github', function () {
 
       expect(await defaultFor({ license: 'UNLICENSED' })).to.equal('private');
       expect(await defaultFor({ license: 'MIT' })).to.equal('public');
-      expect(await defaultFor({})).to.equal('public');
+      expect(await defaultFor({})).to.equal('private');
     });
 
     it('exposes push, shown only when createRepo is true, defaulting to true', async function () {
