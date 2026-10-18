@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.16.0](https://github.com/sektek/generator-base/compare/v0.15.1...v0.16.0) (2026-10-18)
+
+### Features
+
+* **generator-base:** app declares the shared projectNamePrompt ([#28](https://github.com/sektek/generator-base/issues/28)) ([98395fd](https://github.com/sektek/generator-base/commit/98395fd181fe00413a6afd6eb310dc055968c193))
+
 ## [0.15.1](https://github.com/sektek/generator-base/compare/v0.15.0...v0.15.1) (2026-10-11)
 
 ### Bug Fixes
