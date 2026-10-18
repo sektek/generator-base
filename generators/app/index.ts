@@ -21,11 +21,13 @@ const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
 
+// license precedes git so its answer is known when git's (and the composited
+// github's) prompts, such as repoVisibility's default, are resolved.
 const COMPOSITES = [
   { name: 'editorconfig', generatorClass: EditorConfigGenerator },
+  { name: 'license', generatorClass: LicenseGenerator },
   { name: 'git', generatorClass: GitGenerator },
   { name: 'gitconfig', generatorClass: GitConfigGenerator },
-  { name: 'license', generatorClass: LicenseGenerator },
   { name: 'readme', generatorClass: ReadmeGenerator },
   { name: 'devcontainer', generatorClass: DevcontainerGenerator },
   { name: 'config', generatorClass: ConfigGenerator },
