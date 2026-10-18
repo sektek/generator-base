@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.3](https://github.com/sektek/generator-base/compare/v0.18.2...v0.18.3) (2026-10-18)
+
+### Bug Fixes
+
+* **generator-base:** githubToken is derived only when createRepo is true ([#33](https://github.com/sektek/generator-base/issues/33)) ([7afaa03](https://github.com/sektek/generator-base/commit/7afaa03bea52067ed61d4b5b9548d58df92c5766))
+
 ## [0.18.2](https://github.com/sektek/generator-base/compare/v0.18.1...v0.18.2) (2026-10-18)
 
 ### Bug Fixes
