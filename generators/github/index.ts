@@ -62,8 +62,12 @@ export class GithubGenerator extends BaseGenerator<
         type: 'select',
         choices: ['public', 'private'],
         label: 'Repo visibility',
-        provider: (context: PromptContext) =>
-          context.answers.license === 'UNLICENSED' ? 'private' : 'public',
+        // Public only when a license other than UNLICENSED was chosen; no
+        // license at all (github does not need one) stays private.
+        provider: (context: PromptContext) => {
+          const { license } = context.answers;
+          return license && license !== 'UNLICENSED' ? 'public' : 'private';
+        },
         includePrompt: includeIfCreatingRepo,
       }),
       new PromptBuilder().create({
