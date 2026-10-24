@@ -37,6 +37,16 @@ class TestSkillsGenerator extends SkillsGenerator {
   }
 }
 
+class EmptySkillsGenerator extends SkillsGenerator {
+  static composites(): Composite[] {
+    return [];
+  }
+
+  async beforeQueue() {
+    await super.beforeQueue();
+  }
+}
+
 const run = (generator: typeof SkillsGenerator = TestSkillsGenerator) =>
   helper.run(generator).withGenerators([
     [AlphaSkillGenerator, { namespace: '@sektek/base:skill-alpha' }],
@@ -98,7 +108,7 @@ describe('@sektek/base:skills', function () {
   });
 
   it('writes nothing when no skill generators exist', async function () {
-    const { fs } = await run(SkillsGenerator);
+    const { fs } = await run(EmptySkillsGenerator);
 
     expect(Object.keys(fs.dump())).to.deep.equal([]);
   });

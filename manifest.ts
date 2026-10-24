@@ -7,6 +7,7 @@ export const GENERATORS = [
   'gitconfig',
   'license',
   'skills',
+  'skill-gen',
   'readme',
   'devcontainer',
   'workspace',
