@@ -10,6 +10,7 @@ import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
 import { BaseOptions } from '../../lib/types/base-options.js';
+import { SkillGenGenerator } from '../skill-gen/index.js';
 
 export type SkillsOptions = BaseOptions & {
   /** Names of the skills to install. Defaults to every skill. */
@@ -23,7 +24,9 @@ const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
 
-const COMPOSITES = [] satisfies Composite[];
+const COMPOSITES = [
+  { name: '@sektek/base:skill-gen', generatorClass: SkillGenGenerator },
+] satisfies Composite[];
 
 // A skill generator `@scope/pkg:skill-<name>` installs the skill `<name>`.
 const skillNameOf = ({ name }: Composite) =>
