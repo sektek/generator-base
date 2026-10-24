@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.19.0](https://github.com/sektek/generator-base/compare/v0.18.3...v0.19.0) (2026-10-24)
+
+### Features
+
+* **generator-base:** skills selector generator with skills and scope prompts and a shared BaseSkillGenerator ([#34](https://github.com/sektek/generator-base/issues/34)) ([446f4c4](https://github.com/sektek/generator-base/commit/446f4c4b18b386376ab2183da4c5ac133ceb8fca))
+
 ## [0.18.3](https://github.com/sektek/generator-base/compare/v0.18.2...v0.18.3) (2026-10-18)
 
 ### Bug Fixes
