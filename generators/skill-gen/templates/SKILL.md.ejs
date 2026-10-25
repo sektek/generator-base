@@ -1,0 +1,57 @@
+---
+name: <%= name %>
+description: <%= description %>
+---
+
+# Scaffolding with gen
+
+`gen` runs generators that scaffold projects and add components to them. Always run it
+non-interactively: an interactive wizard cannot be answered from a script.
+
+## Running a generator
+
+```sh
+gen <generator> --no-interactive [options] --dest <directory>
+```
+
+- `--no-interactive` takes every answer from flags, a config file or the generator's defaults,
+  and never asks.
+- `--dest <directory>` sets where files are written. Without it, a generator that creates a
+  project writes to a new directory under the current one, and one that adds to a project
+  writes into the current directory.
+- `--force` overwrites files that already exist without asking. Leave it off unless the
+  developer asked for the overwrite.
+- `--install` also runs the package manager install step, which is skipped by default.
+- `--config-file <path>` reads answers from a config file.
+
+`<generator>` is `<name>` (the base generators), `js:<name>`, `<package>:<name>`, or a fully
+qualified `@scope/package:name`.
+
+## Finding out what is available
+
+Do not guess a generator name or a flag. Ask `gen`, since the answer always matches the
+installed version:
+
+```sh
+gen list                       # every installed generator
+gen list <package>             # the generators of one package
+gen <generator> --help         # the flags that generator accepts
+```
+
+An option the generator does not declare is rejected with `unknown option`, so a flag that
+`--help` does not list will not work.
+
+## Git and GitHub options
+
+Most project generators can initialise a repository and create a GitHub one. These options are
+shared: `--no-git-init`, `--create-repo`, `--repo-visibility`, `--repo-owner`,
+`--github-token`, `--no-push`. Run `gen <generator> --help` to see which apply.
+
+Do not put a token on the command line. With `--create-repo`, `gen` finds one through
+`GITHUB_TOKEN`, `GH_TOKEN` or `gh auth token`.
+
+## Reading the result
+
+`gen` exits non-zero and prints the reason to stderr when it fails, for example an unknown
+generator, an unknown option or an invalid value. Fix the command from that message and run it
+again; do not retry the same command.
