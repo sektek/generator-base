@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.20.0](https://github.com/sektek/generator-base/compare/v0.19.0...v0.20.0) (2026-10-25)
+
+### Features
+
+* **generator-base:** the gen skill generator for driving gen non-interactively ([#35](https://github.com/sektek/generator-base/issues/35)) ([d55942a](https://github.com/sektek/generator-base/commit/d55942ac5cdaeab8b470c8fdc61152001a83b43f))
+
 ## [0.19.0](https://github.com/sektek/generator-base/compare/v0.18.3...v0.19.0) (2026-10-24)
 
 ### Features
