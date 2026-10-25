@@ -1,4 +1,3 @@
-import { Composite } from '@sektek/generator';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
 
@@ -24,21 +23,18 @@ class BetaSkillGenerator extends BaseSkillGenerator {
 }
 
 class TestSkillsGenerator extends SkillsGenerator {
+  static skills(): string[] {
+    return ['alpha', 'beta'];
+  }
+
   // Yeoman only calls beforeQueue when it is on the instance's own prototype.
   async beforeQueue() {
     await super.beforeQueue();
   }
-
-  static composites(): Composite[] {
-    return [
-      { name: '@sektek/base:skill-alpha', generatorClass: AlphaSkillGenerator },
-      { name: '@sektek/base:skill-beta', generatorClass: BetaSkillGenerator },
-    ];
-  }
 }
 
 class EmptySkillsGenerator extends SkillsGenerator {
-  static composites(): Composite[] {
+  static skills(): string[] {
     return [];
   }
 
@@ -58,6 +54,10 @@ describe('@sektek/base:skills', function () {
     expect(SkillsGenerator.destinationMode()).to.deep.equal({
       kind: 'inPlace',
     });
+  });
+
+  it('finds its skills from the skill-* generators in the manifest', function () {
+    expect(SkillsGenerator.skills()).to.deep.equal(['gen']);
   });
 
   describe('prompts()', function () {

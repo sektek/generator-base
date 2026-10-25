@@ -1,16 +1,11 @@
-import {
-  Composite,
-  DestinationMode,
-  Prompt,
-  PromptBuilder,
-} from '@sektek/generator';
+import { DestinationMode, Prompt, PromptBuilder } from '@sektek/generator';
 
 import { SkillScope, scopePrompt } from '../../lib/skills/skill-scope.js';
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
 import { BaseOptions } from '../../lib/types/base-options.js';
-import { SkillGenGenerator } from '../skill-gen/index.js';
+import { GENERATORS } from '../../manifest.js';
 
 export type SkillsOptions = BaseOptions & {
   /** Names of the skills to install. Defaults to every skill. */
@@ -24,26 +19,29 @@ const DEFAULT_FEATURES: Partial<BaseFeatures> = {
   unique: true,
 };
 
-const COMPOSITES = [
-  { name: '@sektek/base:skill-gen', generatorClass: SkillGenGenerator },
-] satisfies Composite[];
-
-// A skill generator `@scope/pkg:skill-<name>` installs the skill `<name>`.
-const skillNameOf = ({ name }: Composite) =>
-  name.slice(name.lastIndexOf(':') + 1).replace(/^skill-/, '');
+const SKILL_PREFIX = 'skill-';
 
 /**
- * Installs agent skills, per project or per user, by composing the skill
- * generator of each skill asked for. Skill generators share this
- * generator's prompts, so they can also be run alone.
+ * Installs agent skills, per project or per user. Each skill is its own
+ * generator, `skill-<name>` in this package, composed by name when it is
+ * asked for, so adding a skill needs no change here. Skill generators read
+ * only this generator's prompts, so they can also be run alone.
  */
 export class SkillsGenerator extends BaseGenerator<
   BaseConfig,
   SkillsOptions,
   BaseFeatures
 > {
-  static composites(): Composite[] {
-    return COMPOSITES;
+  /**
+   * The skills this generator can install: one per `skill-<name>` generator
+   * in the package manifest.
+   *
+   * @returns The skill names.
+   */
+  static skills(): string[] {
+    return GENERATORS.filter(name => name.startsWith(SKILL_PREFIX)).map(name =>
+      name.slice(SKILL_PREFIX.length),
+    );
   }
 
   static destinationMode(): DestinationMode {
@@ -51,7 +49,7 @@ export class SkillsGenerator extends BaseGenerator<
   }
 
   static prompts(): Prompt[] {
-    const names = this.composites().map(skillNameOf);
+    const names = this.skills();
 
     return [
       new PromptBuilder().create({
@@ -77,35 +75,35 @@ export class SkillsGenerator extends BaseGenerator<
   }
 
   async beforeQueue() {
-    const requested = this.requestedSkills();
+    const available = this.availableSkills();
 
-    for (const composite of this.skillComposites()) {
-      if (requested.includes(skillNameOf(composite))) {
-        await this.composeWith(composite.name, this.options, true);
+    for (const name of this.requestedSkills()) {
+      if (available.includes(name)) {
+        await this.composeWith(`${SKILL_PREFIX}${name}`, this.options, true);
       }
     }
   }
 
   taskInitializing() {
-    const valid = this.skillComposites().map(skillNameOf);
+    const available = this.availableSkills();
     const unknown = this.requestedSkills().filter(
-      name => !valid.includes(name),
+      name => !available.includes(name),
     );
 
     if (unknown.length > 0) {
       throw new Error(
         `Unknown skill${unknown.length > 1 ? 's' : ''}: ${unknown.join(', ')}. ` +
-          `Valid skills: ${valid.join(', ') || '(none)'}`,
+          `Valid skills: ${available.join(', ') || '(none)'}`,
       );
     }
   }
 
-  private skillComposites(): Composite[] {
-    return (this.constructor as typeof SkillsGenerator).composites();
+  private availableSkills(): string[] {
+    return (this.constructor as typeof SkillsGenerator).skills();
   }
 
   private requestedSkills(): string[] {
-    return this.options.skills ?? this.skillComposites().map(skillNameOf);
+    return this.options.skills ?? this.availableSkills();
   }
 }
 
