@@ -1,10 +1,10 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
+import { PromptContext, projectNamePrompt } from '@sektek/generator';
 import { ProviderFn, getComponent } from '@sektek/utility-belt';
 import { expect } from 'chai';
 import { helper } from '@sektek/generator-test';
-import { projectNamePrompt } from '@sektek/generator';
 
 import { AppGenerator } from './index.js';
 
@@ -151,6 +151,24 @@ describe('@sektek/base:app', function () {
 
       const gitInit = prompts.find(p => p.name === 'gitInit')!;
       expect(await provide(gitInit.provider)).to.equal(true);
+    });
+  });
+
+  describe('prompts() profile', function () {
+    it('contributes a profile prompt that is not asked for base:app', async function () {
+      const profile = AppGenerator.prompts().find(p => p.name === 'profile')!;
+      expect(profile).to.exist;
+
+      const test: (ctx: PromptContext) => boolean | Promise<boolean> =
+        getComponent(profile.includePrompt, 'test');
+      expect(
+        await test({
+          answers: {},
+          flagsGiven: {},
+          configDefaults: {},
+          generator: '@sektek/base:app',
+        }),
+      ).to.equal(false);
     });
   });
 

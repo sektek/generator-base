@@ -1,9 +1,10 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
+import { PromptContext, profilePrompt } from '@sektek/generator';
 import { expect } from 'chai';
+import { getComponent } from '@sektek/utility-belt';
 import { helper } from '@sektek/generator-test';
-import { profilePrompt } from '@sektek/generator';
 
 import { DevcontainerGenerator } from './index.js';
 
@@ -21,8 +22,38 @@ describe('@sektek/base:devcontainer', function () {
   });
 
   describe('prompts()', function () {
-    it('declares the shared profilePrompt', function () {
-      expect(DevcontainerGenerator.prompts()).to.include(profilePrompt);
+    const isProfileIncluded = async (generator?: string) => {
+      const profile = DevcontainerGenerator.prompts().find(
+        p => p.name === profilePrompt.name,
+      )!;
+      const test: (ctx: PromptContext) => boolean | Promise<boolean> =
+        getComponent(profile.includePrompt, 'test');
+      return test({
+        answers: {},
+        flagsGiven: {},
+        configDefaults: {},
+        generator,
+      });
+    };
+
+    it('declares the profile prompt', function () {
+      expect(DevcontainerGenerator.prompts().map(p => p.name)).to.include(
+        profilePrompt.name,
+      );
+    });
+
+    it('asks for the profile when base:devcontainer is requested', async function () {
+      expect(await isProfileIncluded('@sektek/base:devcontainer')).to.equal(
+        true,
+      );
+    });
+
+    it('does not ask for the profile when only composed by base:app', async function () {
+      expect(await isProfileIncluded('@sektek/base:app')).to.equal(false);
+    });
+
+    it('does not ask for the profile when no generator is set', async function () {
+      expect(await isProfileIncluded()).to.equal(false);
     });
   });
 
