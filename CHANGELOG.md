@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.20.1](https://github.com/sektek/generator-base/compare/v0.20.0...v0.20.1) (2026-11-10)
+
+### Bug Fixes
+
+* **generator-base:** bump @sektek/generator to the release with PromptContext.generator ([#36](https://github.com/sektek/generator-base/issues/36)) ([96416e6](https://github.com/sektek/generator-base/commit/96416e6f6026c4360508e337ba2a369b04411878))
+
 ## [0.20.0](https://github.com/sektek/generator-base/compare/v0.19.0...v0.20.0) (2026-10-25)
 
 ### Features
