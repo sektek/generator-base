@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.21.0](https://github.com/sektek/generator-base/compare/v0.20.1...v0.21.0) (2026-11-21)
+
+### Features
+
+* **generator-base:** devcontainer's profile prompt is asked only when base:devcontainer is requested ([#38](https://github.com/sektek/generator-base/issues/38)) ([fda70e6](https://github.com/sektek/generator-base/commit/fda70e6ad60b47f09790709fba59cd3dc5818417))
+
 ## [0.20.1](https://github.com/sektek/generator-base/compare/v0.20.0...v0.20.1) (2026-11-10)
 
 ### Bug Fixes
