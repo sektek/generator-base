@@ -42,6 +42,9 @@ const NON_CONFIG_OPTION_KEYS = new Set<string>([
   'explicitOptionKeys',
   'force',
   'destinationRoot',
+  // A credential: gen.config.* is committed with the project, so a token
+  // must never be written to it. It is resolved at run time instead.
+  'githubToken',
   // yeoman-generator/yeoman-environment's own injected options.
   '_',
   'env',

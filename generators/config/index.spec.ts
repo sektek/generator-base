@@ -270,6 +270,42 @@ describe('@sektek/base:config', function () {
     expect(content).to.not.include('configFile');
   });
 
+  for (const configFile of [
+    'gen.config.yaml',
+    'gen.config.json',
+    'gen.config.js',
+  ]) {
+    it(`never writes githubToken into ${configFile}, explicit or not`, async function () {
+      for (const explicitOptionKeys of [
+        ['license', 'githubToken'],
+        undefined,
+      ]) {
+        const { fs } = await helper.run(generator).withOptions({
+          configFile,
+          ...(explicitOptionKeys && { explicitOptionKeys }),
+          license: 'MIT',
+          githubToken: 'ghp_faketoken',
+        });
+
+        const content = fs.read(configFile);
+        expect(content).to.not.include('githubToken');
+        expect(content).to.not.include('ghp_faketoken');
+        expect(content).to.include('MIT');
+      }
+    });
+  }
+
+  it('drops a githubToken already in an existing config when rewriting it', async function () {
+    const { fs } = await helper
+      .run(generator)
+      .withOptions({ explicitOptionKeys: ['license'], license: 'MIT' })
+      .inTmpDir(dir => {
+        writeFileSync(join(dir, 'gen.config.yaml'), 'githubToken: ghp_old\n');
+      });
+
+    expect(fs.read('gen.config.yaml')).to.not.include('ghp_old');
+  });
+
   it('never writes yeoman-generator/yeoman-environment-injected plumbing options into the config file', async function () {
     const { fs } = await helper.run(generator).withOptions({
       explicitOptionKeys: [],
