@@ -351,7 +351,7 @@ describe('@sektek/base:github', function () {
       expect(repoOwner.capabilities).to.deep.equal([clearable]);
     });
 
-    it('exposes githubToken, shown only when createRepo is true, deriving its default the same way resolveToken does', async function () {
+    it('exposes githubToken, shown only when createRepo is true', async function () {
       const prompts = GithubGenerator.prompts();
       const githubToken = prompts.find(p => p.name === 'githubToken')!;
 
@@ -377,7 +377,7 @@ describe('@sektek/base:github', function () {
       let execFile: SinonStub;
       let savedEnv: Record<string, string | undefined>;
 
-      const derive = (answers: Record<string, unknown>) => {
+      const defaultFor = (answers: Record<string, unknown>) => {
         const githubToken = GithubGenerator.prompts().find(
           p => p.name === 'githubToken',
         )!;
@@ -410,31 +410,19 @@ describe('@sektek/base:github', function () {
       });
 
       for (const [label, answers] of [
+        ['createRepo is true', { createRepo: true }],
         ['createRepo is false', { createRepo: false }],
         ['createRepo is unset', {}],
       ] as const) {
-        it(`derives nothing, reading neither env nor gh, when ${label}`, async function () {
-          // With an env token set, a derived value would be returned.
-          expect(await derive(answers)).to.equal(undefined);
+        it(`has no default, reading neither env nor gh, when ${label}`, async function () {
+          expect(await defaultFor(answers)).to.equal(undefined);
 
-          // With none set, the chain would fall through to `gh`.
           delete process.env.GITHUB_TOKEN;
-          expect(await derive(answers)).to.equal(undefined);
+          process.env.GH_TOKEN = FAKE_ENV_TOKEN;
+          expect(await defaultFor(answers)).to.equal(undefined);
           expect(execFile).not.to.have.been.called;
         });
       }
-
-      it('derives from the environment when createRepo is true', async function () {
-        expect(await derive({ createRepo: true })).to.equal(FAKE_ENV_TOKEN);
-        expect(execFile).not.to.have.been.called;
-      });
-
-      it('falls back to `gh auth token` when createRepo is true and no env token is set', async function () {
-        delete process.env.GITHUB_TOKEN;
-
-        expect(await derive({ createRepo: true })).to.equal('fake-gh-token');
-        expect(execFile).to.have.been.calledOnce;
-      });
     });
 
     it('gates createRepo on gitInit not being false', async function () {

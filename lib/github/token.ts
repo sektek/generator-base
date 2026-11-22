@@ -32,9 +32,8 @@ function nonEmptyEnvVar(name: string): string | undefined {
 }
 
 /**
- * The non-`explicit` half of {@link resolveToken}'s chain, shared with
- * {@link deriveGithubToken}: `GITHUB_TOKEN` env, then `GH_TOKEN` env, then
- * `gh auth token`.
+ * The non-`explicit` half of {@link resolveToken}'s chain: `GITHUB_TOKEN`
+ * env, then `GH_TOKEN` env, then `gh auth token`.
  */
 const envChain = new ChainedOptionalProvider<string>({
   providers: [
@@ -64,18 +63,6 @@ export async function resolveToken(explicit?: string): Promise<string> {
     throw new Error(MISSING_TOKEN_MESSAGE);
   }
   return token;
-}
-
-/**
- * A `githubToken` prompt's provider: the same chain as `resolveToken`
- * (minus the `explicit` argument, meaningless for a prompt's own default),
- * but resolving to `undefined` instead of throwing when nothing's found,
- * so the user can just type one in.
- *
- * @returns The resolved token, or `undefined`.
- */
-export async function deriveGithubToken(): Promise<string | undefined> {
-  return envChain.get();
 }
 
 /**

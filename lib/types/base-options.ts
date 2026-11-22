@@ -29,7 +29,8 @@ export type BaseOptions = CoreOptions & {
   /**
    * An explicit GitHub token to authenticate with. Defaults to `undefined`,
    * which falls back to `lib/github/token.ts`'s own resolution chain
-   * (`GITHUB_TOKEN`/`GH_TOKEN` env vars, then `gh auth token`).
+   * (`GITHUB_TOKEN`/`GH_TOKEN` env vars, then `gh auth token`) at run time.
+   * The prompt never defaults to a resolved token.
    */
   githubToken?: string;
 
