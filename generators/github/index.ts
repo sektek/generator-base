@@ -5,8 +5,8 @@ import {
   clearable,
 } from '@sektek/generator';
 
-import { ApiOptions, deriveGithubToken } from '../../lib/github/token.js';
 import { GithubClient, defaultGithubClient } from '../../lib/github/client.js';
+import { ApiOptions } from '../../lib/github/token.js';
 import { BaseConfig } from '../../lib/types/base-config.js';
 import { BaseFeatures } from '../../lib/types/base-features.js';
 import { BaseGenerator } from '../../lib/base-generator.js';
@@ -53,11 +53,9 @@ export class GithubGenerator extends BaseGenerator<
         name: 'githubToken',
         type: 'text',
         label: 'GitHub token (leave blank to use `gh auth token`)',
-        // Derive only when a repo is being created: gen evaluates providers
-        // for gated-out prompts too, and this one reads the environment and
-        // spawns `gh`.
-        provider: (context: PromptContext) =>
-          includeIfCreatingRepo(context) ? deriveGithubToken() : undefined,
+        // No default: a default is an answer, and an answer is saved to
+        // gen.config.*. A blank token is resolved at run time instead.
+        provider: () => undefined,
         includePrompt: includeIfCreatingRepo,
         capabilities: [clearable],
       }),
