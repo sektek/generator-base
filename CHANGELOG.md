@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.21.1](https://github.com/sektek/generator-base/compare/v0.21.0...v0.21.1) (2026-11-22)
+
+### Bug Fixes
+
+* **generator-base:** the config generator never writes githubToken to gen.config.* ([#40](https://github.com/sektek/generator-base/issues/40)) ([977df88](https://github.com/sektek/generator-base/commit/977df88b27b52484a892bd78e8fe09c95e7d5358))
+* **generator-base:** the githubToken prompt has no default, so a blank answer resolves the token at run time ([#39](https://github.com/sektek/generator-base/issues/39)) ([288ee61](https://github.com/sektek/generator-base/commit/288ee61ad7edd203e60a2fb77ab64fad2561e99a))
+
 ## [0.21.0](https://github.com/sektek/generator-base/compare/v0.20.1...v0.21.0) (2026-11-21)
 
 ### Features
